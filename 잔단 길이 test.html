@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>재단 길이 확인용 계산기 (최종)</title>
+<style>
+/* -------------------- 전역 스타일 -------------------- */
+html, body {
+    margin:0; padding:0; height:100%;
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background:#1a1a2e; color:#fff;
+    overflow: hidden;
+}
+h1{
+    text-align:center; margin:0; padding:16px; font-size:30px;
+    color:#f0f0f0; background:#1a1a2e;
+    border-bottom: 1px solid #3e3e60;
+}
+
+/* -------------------- 메인 2분할 레이아웃 -------------------- */
+.main-container {
+    display: flex;
+    height: calc(100vh - 75px);
+    padding: 20px;
+    gap: 20px;
+    box-sizing: border-box;
+}
+.input-section, .result-section {
+    background:#252540;
+    padding: 20px;
+    border-radius:14px;
+    box-shadow:0 4px 15px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.input-section {
+    flex: 0 0 450px;
+}
+.result-section {
+    flex: 1;
+}
+
+/* -------------------- 입력 패널 스타일 -------------------- */
+.info-panel { padding-bottom: 20px; border-bottom: 1px solid #3e3e60; }
+.prod-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+label {
+    display: block; margin-top: 10px; font-size: 16px;
+    font-weight: 600; color: #ccc;
+}
+input[type="number"]{
+    width:100%; padding:10px 14px; font-size:19px; border-radius:8px;
+    border:1px solid #3e3e60; margin-top:6px; background:#333355;
+    color:#fff; box-sizing:border-box;
+    -moz-appearance: textfield;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none; margin: 0;
+}
+
+.prod-list {
+    flex: 1;
+    margin-top:10px;
+    overflow-y:auto; padding-right:10px;
+}
+.prod-row {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+}
+.prod-row .prod-label { font-size: 15px; font-weight: 600; min-width: 60px; }
+.prod-row .prod-len-input { flex: 2; }
+.prod-row .prod-margin-input { flex: 1; }
+
+.buttons{ margin-top: auto; padding-top: 15px; display:flex; gap: 10px; }
+.buttons button{
+    flex:1; padding:12px 0; font-size:16px; border-radius:10px;
+    border:none; background:#3a79d8; color:#fff; font-weight:700;
+    cursor: pointer;
+}
+/* 제품 추가/제거 버튼 레이아웃 수정 */
+.prod-panel .buttons {
+    margin-top: 20px;
+    padding-top: 0;
+}
+.prod-panel .buttons button#addMultiProd { flex: 1.5; } /* '여러 개 추가'를 더 넓게 */
+.prod-panel .buttons button#addProd { flex: 1; }
+.prod-panel .buttons button#removeProd { flex: 1; }
+
+/* 하단 메인 버튼 스타일 수정 */
+.main-actions {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #3e3e60;
+    display: flex;
+    gap: 10px;
+}
+.main-actions button {
+    flex: 1;
+    height: 50px;
+}
+
+.buttons button.btn-primary {background: #2ecc71;}
+.buttons button:active{filter: brightness(0.9);}
+
+
+/* -------------------- 결과값 패널 (시인성 극대화) -------------------- */
+.result-section h3 {
+    margin: 0 0 15px 0;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #3498db;
+    color: #3498db;
+    text-align: center;
+    font-size: 22px;
+}
+.result-list {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+.cut-row{
+    display:flex; justify-content:space-between; align-items:center;
+    padding: 18px 20px;
+    border-radius:12px; background:#1a1a2e;
+    margin-bottom: 10px;
+}
+.cut-left{display:flex; flex-direction:column; text-align:left; gap: 5px;}
+.cut-row .prod-name-row { display: flex; align-items: baseline; gap: 12px; }
+.cut-row .prod-name{font-size:24px; font-weight:700; color:#3498db;}
+.cut-row .main-prod-len{font-size:24px; font-weight:700; color:#f0f0f0;}
+.cut-row .prod-len-sub-info{font-size:16px; color:#b0b0d0;}
+.cut-row .prod-len-sub-info b { color: #2ecc71; font-size: 18px; font-weight: 700;}
+.cut-row .cut-pos{
+    font-size: 52px;
+    font-weight:900;
+    color:#e74c3c;
+    margin-left: 20px;
+}
+
+/* -------------------- 모달 -------------------- */
+.custom-modal-overlay{display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:10001; justify-content:center; align-items:center; padding:20px;}
+.custom-modal-content{background:#252540; padding:25px; border-radius:15px; width:90%; max-width:400px; box-shadow:0 0 20px rgba(0,0,0,0.5); text-align:center;}
+.modal-title{font-size:22px; font-weight:700; color:#3498db; margin-bottom:15px;}
+.modal-message{font-size:16px; color:#ccc; margin-bottom:20px; white-space:pre-wrap;}
+.modal-buttons button{padding:10px 20px; font-size:16px; border-radius:8px; border:none; font-weight:700; transition:background 0.2s; cursor:pointer;}
+#modalConfirmBtn{background:#3a79d8; color:#fff; margin-left:10px;}
+#modalCancelBtn{background:#555; color:#fff;}
+
+</style>
+</head>
+<body>
+<h1>재단 길이 확인용 계산기</h1>
+<div class="main-container">
+    <div class="input-section">
+        <div class="info-panel">
+            <label>총 원단 길이 (m)</label>
+            <input type="number" id="totalInput" placeholder="예: 501.54">
+            <label>기본 여유율 (%)</label>
+            <input type="number" id="marginInput" placeholder="예: 2" value="2">
+        </div>
+
+        <div class="prod-panel">
+            <label style="margin-top: 20px;">제품 목록</label>
+            <div class="prod-list" id="prodList"></div>
+            <div class="buttons">
+                <button id="addMultiProd" type="button" class="btn-primary">+ 여러 개 추가</button>
+                <button id="addProd" type="button">+ 1개 추가</button>
+                <button id="removeProd" type="button">- 제품 제거</button>
+            </div>
+        </div>
+
+        <div class="main-actions">
+            <button id="calcBtn" type="button" class="btn-primary">계산하기</button>
+            <button id="resetBtn" type="button">초기화</button>
+        </div>
+    </div>
+
+    <div class="result-section">
+        <h3>계산 결과</h3>
+        <div class="result-list" id="resultList">
+            <div style="padding:15px; text-align:center; color:#ccc;">계산된 재단 목록이 없습니다.</div>
+        </div>
+    </div>
+</div>
+
+<div id="multiAddModalOverlay" class="custom-modal-overlay">
+    <div class="custom-modal-content">
+        <div class="modal-title">제품 반복 추가</div>
+        <div class="modal-message">추가할 제품의 길이와 수량을 입력하세요.</div>
+        
+        <label>제품 길이 (m)</label>
+        <input type="number" id="multiProdLengthInput" placeholder="예: 100">
+        
+        <label style="margin-top:15px;">수량</label>
+        <input type="number" id="multiProdQtyInput" placeholder="예: 5">
+
+        <div class="modal-buttons" style="margin-top:20px;">
+            <button id="multiCancelBtn" type="button">취소</button>
+            <button id="multiConfirmBtn" type="button" style="background-color: #2ecc71;">추가하기</button>
+        </div>
+    </div>
+</div>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+const MAX_PROD = 30;
+
+const prodList = document.getElementById('prodList');
+const totalInput = document.getElementById('totalInput');
+const marginInput = document.getElementById('marginInput');
+const addBtn = document.getElementById('addProd');
+const removeBtn = document.getElementById('removeProd');
+const calcBtn = document.getElementById('calcBtn');
+const resetBtn = document.getElementById('resetBtn');
+const resultList = document.getElementById('resultList');
+
+const addMultiBtn = document.getElementById('addMultiProd');
+const multiAddModal = document.getElementById('multiAddModalOverlay');
+const multiLengthInput = document.getElementById('multiProdLengthInput');
+const multiQtyInput = document.getElementById('multiProdQtyInput');
+const multiConfirmBtn = document.getElementById('multiConfirmBtn');
+const multiCancelBtn = document.getElementById('multiCancelBtn');
+
+function initializeProdInputs(){
+    prodList.innerHTML = '';
+    for(let i=0; i<8; i++) {
+        createProdInput();
+    }
+}
+
+function createProdInput(length = '', margin = ''){
+    const count = prodList.querySelectorAll('.prod-row').length + 1;
+    if(count > MAX_PROD) return;
+    
+    const row = document.createElement('div');
+    row.className = 'prod-row';
+    row.innerHTML = `
+        <div class="prod-label">제품 ${count}</div>
+        <input type="number" class="prod-len-input" placeholder="길이 (m)" value="${length}">
+        <input type="number" class="prod-margin-input" placeholder="여유율 (%)" value="${margin}">
+    `;
+    prodList.appendChild(row);
+}
+
+function buildCutPlan(){
+    const total_m = parseFloat(totalInput.value);
+    if(isNaN(total_m) || total_m <= 0){
+        alert('총 원단 길이를 0보다 크게 입력해 주세요.');
+        totalInput.focus();
+        return false;
+    }
+
+    const globalMargin = parseFloat(marginInput.value) || 0;
+    const products = [];
+
+    prodList.querySelectorAll('.prod-row').forEach((row) => {
+        const lenInput = row.querySelector('.prod-len-input');
+        const marginInput = row.querySelector('.prod-margin-input');
+        const v_m = parseFloat(lenInput.value);
+
+        if(!isNaN(v_m) && v_m > 0){
+            let margin_perc = parseFloat(marginInput.value);
+            if (isNaN(margin_perc) || marginInput.value.trim() === '') {
+                margin_perc = globalMargin;
+            }
+            
+            const required_m = v_m * (1 + margin_perc / 100);
+
+            products.push({
+                index: products.length + 1,
+                prodLen_m: v_m,
+                required_m: required_m,
+                margin_perc: margin_perc
+            });
+        }
+    });
+
+    if(products.length === 0){
+        alert('유효한 제품 길이를 1개 이상 입력해 주세요.');
+        return false;
+    }
+
+    let cutPlan = [];
+    let cumulative = 0;
+    for(let i = 0; i < products.length; i++){
+        const item = products[i];
+        cumulative += item.required_m;
+
+        if(cumulative > total_m){
+            alert(`⛔ 작업 중단: 총 원단 길이를 초과했습니다!\n제품 ${item.index} (${item.prodLen_m}m) 재단 시 초과됩니다.`);
+            break;
+        }
+
+        const remaining_m = total_m - cumulative;
+        cutPlan.push({
+            ...item,
+            cutPos: remaining_m.toFixed(2)
+        });
+    }
+    renderResult(cutPlan);
+    return true;
+}
+
+function renderResult(cutPlan){
+    resultList.innerHTML = '';
+    if(cutPlan.length === 0){
+        resultList.innerHTML = '<div style="padding:15px;text-align:center;color:#ccc;">계산된 재단 목록이 없습니다.</div>';
+        return;
+    }
+
+    cutPlan.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'cut-row';
+        row.innerHTML = `
+            <div class="cut-left">
+                <div class="prod-name-row">
+                    <div class="prod-name">제품 ${item.index}</div>
+                    <div class="main-prod-len">${item.prodLen_m.toFixed(2)} m</div>
+                </div>
+                <div class="prod-len-sub-info">
+                    (여유율 ${item.margin_perc}%) → <b>필요: ${item.required_m.toFixed(2)}m</b>
+                </div>
+            </div>
+            <div class="cut-pos">${item.cutPos} m</div>
+        `;
+        resultList.appendChild(row);
+    });
+}
+
+function applyGlobalMargin() {
+    const globalMarginValue = marginInput.value;
+    if (globalMarginValue.trim() === '') return;
+
+    prodList.querySelectorAll('.prod-margin-input').forEach(input => {
+        if (input.value.trim() === '') {
+            input.value = globalMarginValue;
+        }
+    });
+}
+
+addBtn.addEventListener('click', () => {
+    createProdInput();
+    applyGlobalMargin();
+});
+removeBtn.addEventListener('click', () => {
+    const rows = prodList.querySelectorAll('.prod-row');
+    if(rows.length > 1) {
+        prodList.removeChild(rows[rows.length - 1]);
+    } else {
+        alert("최소 1개 제품은 유지해야 합니다.");
+    }
+});
+calcBtn.addEventListener('click', buildCutPlan);
+resetBtn.addEventListener('click', () => {
+    if(confirm('모든 입력값을 초기화하시겠습니까?')){
+        totalInput.value = '';
+        marginInput.value = '2';
+        initializeProdInputs();
+        resultList.innerHTML = '<div style="padding:15px; text-align:center; color:#ccc;">계산된 재단 목록이 없습니다.</div>';
+    }
+});
+
+totalInput.addEventListener('change', applyGlobalMargin);
+marginInput.addEventListener('input', applyGlobalMargin);
+
+addMultiBtn.addEventListener('click', () => {
+    multiLengthInput.value = '';
+    multiQtyInput.value = '';
+    multiAddModal.style.display = 'flex';
+    multiLengthInput.focus();
+});
+
+multiCancelBtn.addEventListener('click', () => multiAddModal.style.display = 'none');
+
+multiConfirmBtn.addEventListener('click', () => {
+    const length = parseFloat(multiLengthInput.value);
+    let quantity = parseInt(multiQtyInput.value);
+
+    if (isNaN(length) || length <= 0) {
+        alert('올바른 제품 길이를 입력하세요.');
+        return;
+    }
+    if (isNaN(quantity) || quantity <= 0) {
+        alert('올바른 수량을 입력하세요.');
+        return;
+    }
+
+    const allProdInputs = prodList.querySelectorAll('.prod-len-input');
+    for (const input of allProdInputs) {
+        if (quantity === 0) break;
+        if (input.value.trim() === '') {
+            input.value = length;
+            quantity--;
+        }
+    }
+
+    for (let i = 0; i < quantity; i++) {
+        createProdInput(length);
+    }
+    
+    applyGlobalMargin();
+    multiAddModal.style.display = 'none';
+});
+
+
+document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    
+    const target = e.target;
+
+    if (target.tagName !== 'INPUT') return;
+    
+    e.preventDefault();
+
+    if (target === multiLengthInput) {
+        multiQtyInput.focus();
+        return;
+    }
+    if (target === multiQtyInput) {
+        multiConfirmBtn.click();
+        return;
+    }
+    
+    const inputs = Array.from(
+        document.querySelectorAll('#totalInput, #marginInput, .prod-len-input, .prod-margin-input')
+    );
+    const currentIndex = inputs.indexOf(target);
+    
+    let nextIndex = -1;
+
+    if (target.classList.contains('prod-len-input')) {
+        nextIndex = currentIndex + 2;
+    } else {
+        nextIndex = currentIndex + 1;
+    }
+
+    if (nextIndex < inputs.length) {
+        inputs[nextIndex].focus();
+    } else {
+        calcBtn.focus();
+    }
+});
+
+initializeProdInputs();
+});
+</script>
+</body>
+</html>
