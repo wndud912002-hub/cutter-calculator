@@ -2,8 +2,8 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>넘기기 작업 계산기</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>넘기기 작업 계산기 (시인성 개선)</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
@@ -107,12 +107,15 @@ input{
 .cut-row .prod-len{font-size:11px; color:#b0b0d0;}
 .cut-row .cut-pos{font-size:30px; font-weight:900; color:#e74c3c;}
 
-/* -------------------- 키패드 -------------------- */
+/* -------------------- 키패드 (개선) -------------------- */
 #softKeypad{
-    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-    width:90%; max-width:400px; background:#252540; padding:10px;
-    display: grid; grid-template-columns: repeat(4, 1fr); gap:8px;
-    border-radius:14px; box-shadow:0 8px 30px rgba(0,0,0,0.8); z-index:10000; margin: 0;
+    position: fixed; bottom: 0; left: 0; right: 0;
+    width: 100%; max-width: none;
+    background: #1c1c34; padding: 10px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+    border-radius: 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+    z-index: 10002; margin: 0; box-sizing: border-box;
 }
 .keypad-button{
     padding:18px; font-size:26px; font-weight:bold; background:#4a4a75;
@@ -137,7 +140,7 @@ input{
 .keypad-button[data-key="3"] { grid-row: 3; grid-column: 3; }
 .keypad-button[data-key="0"] { grid-row: 4; grid-column: 1 / span 3; }
 
-/* -------------------- 전체화면 -------------------- */
+/* -------------------- 전체화면 (시인성 개선) -------------------- */
 .fullscreen{
     display:none; position:fixed; inset:0; background:#1a1a2e; z-index:9999;
     flex-direction:column; align-items:center; justify-content:flex-start;
@@ -174,15 +177,16 @@ input{
 .controls-bottom button:active{background:#c0392b;}
 
 #fsCuts .cut-row{
-    margin-bottom: 6px; padding: 10px 15px; border-radius: 12px; background: #2f2f50;
+    margin-bottom: 6px; padding: 15px 20px; border-radius: 12px; background: #2f2f50;
     box-shadow: 0 4px 15px rgba(0,0,0,0.3); align-items: center; display: flex;
+    transition: background-color 0.2s;
 }
 #fsCuts .cut-left {flex: 1; display: flex; flex-direction: column; align-items: flex-start;}
 #fsCuts .prod-name-row {display: flex; align-items: baseline; gap: 10px;}
-#fsCuts .prod-name{font-size:24px; font-weight:900; color:#3498db;}
-#fsCuts .main-len{font-size:28px; font-weight:900; color: #f0f0f0;}
-#fsCuts .required-len{font-size:14px; color:#b0b0d0; font-weight:500; margin-top: 4px;}
-#fsCuts .cut-pos{font-size:48px; font-weight:900; color:#e74c3c;}
+#fsCuts .prod-name{font-size:30px; font-weight:900; color:#3498db;}
+#fsCuts .main-len{font-size:32px; font-weight:900; color: #f0f0f0;}
+#fsCuts .required-len{font-size:16px; color:#b0b0d0; font-weight:500; margin-top: 4px;}
+#fsCuts .cut-pos{font-size:68px; font-weight:900; color:#e74c3c;}
 
 /* -------------------- 모달 -------------------- */
 .custom-modal-overlay{display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:10001; justify-content:center; align-items:center; padding:20px;}
@@ -208,55 +212,58 @@ input{
 <body onload="loadResults()">
 <h1>넘기기 작업 계산기</h1>
 <div class="content-wrapper">
-<div class="top-area">
-<div class="info-panel">
-<label>총 원단 길이 (m)</label>
-<input type="text" readonly id="totalInput" placeholder="예: 501.54">
-<label>여유율 (%)</label>
-<input type="text" readonly id="marginInput" placeholder="예: 2" value="2">
-<div class="buttons">
-<button id="calcBtn" type="button" class="btn-primary">계산하기</button>
-<button id="resetBtn" type="button">초기화</button>
-<button id="fsBtn" type="button">작업표</button>
-</div>
-</div>
-<div class="prod-panel">
-<label>제품 길이 (m)</label>
-<div class="prod-list" id="prodList"></div>
-<div class="buttons">
-<button id="addProd" type="button">+ 제품 추가</button>
-<button id="removeProd" type="button">- 제품 제거</button>
-</div>
-</div>
-<div class="record-panel">
-    <label>저장된 계산 기록</label>
-    <div class="record-list" id="recordList">
-        <div style="padding:15px; text-align:center; color:#ccc;">저장된 기록이 없습니다.</div>
+    <div class="top-area">
+        <div class="info-panel">
+            <label>총 원단 길이 (m)</label>
+            <input type="text" readonly id="totalInput" placeholder="예: 501.54">
+            <label>여유율 (%)</label>
+            <input type="text" readonly id="marginInput" placeholder="예: 2" value="2">
+            <div class="buttons">
+                <button id="calcBtn" type="button" class="btn-primary">계산하기</button>
+                <button id="resetBtn" type="button">초기화</button>
+                <button id="fsBtn" type="button">작업표</button>
+            </div>
+        </div>
+        <div class="prod-panel">
+            <label>제품 길이 (m)</label>
+            <div class="prod-list" id="prodList"></div>
+            <div class="buttons">
+                <button id="addProd" type="button">+ 1개 추가</button>
+                <button id="addMultiProd" type="button" class="btn-primary">+ 여러 개 추가</button>
+                <button id="removeProd" type="button">- 제품 제거</button>
+            </div>
+        </div>
+        <div class="record-panel">
+            <label>저장된 계산 기록</label>
+            <div class="record-list" id="recordList">
+                <div style="padding:15px; text-align:center; color:#ccc;">저장된 기록이 없습니다.</div>
+            </div>
+        </div>
+    </div>
+    <div class="cuts" id="previewCuts">
+        <h3>계산 결과 미리보기 (재단 위치)</h3>
+        <div class="preview-cuts-list" id="previewCutsList">
+            <div style="padding:15px; text-align:center; color:#ccc;">계산된 재단 목록이 없습니다.</div>
+        </div>
     </div>
 </div>
-</div>
-<div class="cuts" id="previewCuts">
-<h3>계산 결과 미리보기 (재단 위치)</h3>
-<div class="preview-cuts-list" id="previewCutsList">
-    <div style="padding:15px; text-align:center; color:#ccc;">계산된 재단 목록이 없습니다.</div>
-</div>
-</div>
+
 <div id="softKeypad" style="display: none;">
-<button class="keypad-button" data-key="7">7</button>
-<button class="keypad-button" data-key="8">8</button>
-<button class="keypad-button" data-key="9">9</button>
-<button class="keypad-button keypad-action del-key" data-key="back">⌫</button>
-<button class="keypad-button" data-key="4">4</button>
-<button class="keypad-button" data-key="5">5</button>
-<button class="keypad-button" data-key="6">6</button>
-<button class="keypad-button keypad-action" data-key="enter" id="enterKey">확인</button>
-<button class="keypad-button" data-key="1">1</button>
-<button class="keypad-button" data-key="2">2</button>
-<button class="keypad-button" data-key="3">3</button>
-<button class="keypad-button" data-key="." id="dotKey">.</button>
-<button class="keypad-button" data-key="0" id="zeroKey">0</button>
+    <button class="keypad-button" data-key="7">7</button>
+    <button class="keypad-button" data-key="8">8</button>
+    <button class="keypad-button" data-key="9">9</button>
+    <button class="keypad-button keypad-action del-key" data-key="back">⌫</button>
+    <button class="keypad-button" data-key="4">4</button>
+    <button class="keypad-button" data-key="5">5</button>
+    <button class="keypad-button" data-key="6">6</button>
+    <button class="keypad-button keypad-action" data-key="enter" id="enterKey">확인</button>
+    <button class="keypad-button" data-key="1">1</button>
+    <button class="keypad-button" data-key="2">2</button>
+    <button class="keypad-button" data-key="3">3</button>
+    <button class="keypad-button" data-key="." id="dotKey">.</button>
+    <button class="keypad-button" data-key="0" id="zeroKey">0</button>
 </div>
-</div>
+
 <div id="fsContainer" class="fullscreen">
   <div class="fs-title">재단 위치 표시</div>
     <div class="fs-info-container">
@@ -279,14 +286,14 @@ input{
   </div>
 </div>
 <div id="customModalOverlay" class="custom-modal-overlay">
-<div class="custom-modal-content">
-<div id="modalTitle" class="modal-title"></div>
-<div id="modalMessage" class="modal-message"></div>
-<div class="modal-buttons">
-<button id="modalCancelBtn" type="button">취소</button>
-<button id="modalConfirmBtn" type="button">확인</button>
-</div>
-</div>
+    <div class="custom-modal-content">
+        <div id="modalTitle" class="modal-title"></div>
+        <div id="modalMessage" class="modal-message"></div>
+        <div class="modal-buttons">
+            <button id="modalCancelBtn" type="button">취소</button>
+            <button id="modalConfirmBtn" type="button">확인</button>
+        </div>
+    </div>
 </div>
 <div id="passwordModalOverlay" class="custom-modal-overlay">
     <div class="custom-modal-content">
@@ -296,6 +303,24 @@ input{
         <div class="modal-buttons" style="margin-top:20px;">
             <button id="pwdCancelBtn" type="button">취소</button>
             <button id="pwdConfirmBtn" type="button">삭제 확인</button>
+        </div>
+    </div>
+</div>
+
+<div id="multiAddModalOverlay" class="custom-modal-overlay">
+    <div class="custom-modal-content">
+        <div class="modal-title">제품 반복 추가</div>
+        <div class="modal-message">추가할 제품의 길이와 수량을 입력하세요.</div>
+        
+        <label>제품 길이 (m)</label>
+        <input type="text" readonly id="multiProdLengthInput" placeholder="예: 100">
+        
+        <label style="margin-top:15px;">수량</label>
+        <input type="text" readonly id="multiProdQtyInput" placeholder="예: 5">
+
+        <div class="modal-buttons" style="margin-top:20px;">
+            <button id="multiCancelBtn" type="button">취소</button>
+            <button id="multiConfirmBtn" type="button" class="btn-primary" style="background-color: #2ecc71;">추가하기</button>
         </div>
     </div>
 </div>
@@ -334,6 +359,14 @@ const passwordModalOverlay = document.getElementById('passwordModalOverlay');
 const passwordModalInput = document.getElementById('passwordModalInput');
 const pwdConfirmBtn = document.getElementById('pwdConfirmBtn');
 const pwdCancelBtn = document.getElementById('pwdCancelBtn');
+
+const addMultiBtn = document.getElementById('addMultiProd');
+const multiAddModal = document.getElementById('multiAddModalOverlay');
+const multiLengthInput = document.getElementById('multiProdLengthInput');
+const multiQtyInput = document.getElementById('multiProdQtyInput');
+const multiConfirmBtn = document.getElementById('multiConfirmBtn');
+const multiCancelBtn = document.getElementById('multiCancelBtn');
+
 
 let cutPlan = [];
 let focusedInput = null;
@@ -480,13 +513,13 @@ function inputClickHandler(event){
     const isProdInput = focusedInput.closest('.prod-panel') !== null;
     const isPwdInput = focusedInput === passwordModalInput;
 
-    if (isProdInput || isPwdInput) {
+    if (isProdInput || isPwdInput || focusedInput === multiLengthInput || focusedInput === multiQtyInput) {
         dotKey.style.display = 'none';
     } else {
         dotKey.style.display = 'block';
     }
 
-    if(focusedInput !== passwordModalInput) {
+    if(focusedInput !== passwordModalInput && !focusedInput.closest('#multiAddModalOverlay')) {
         setTimeout(()=>{
             const keypadHeight = softKeypad.offsetHeight;
             const inputRect = focusedInput.getBoundingClientRect();
@@ -515,7 +548,7 @@ function createProdInput(value){
     const row=document.createElement('div');
     row.className='prod-row';
     const displayValue = value!==undefined && !isNaN(parseFloat(value)) ? Math.floor(parseFloat(value)) : '';
-    row.innerHTML=`<div>${label}</div><input type="text" readonly placeholder="${label} 길이 (m)" value="${displayValue}">`;
+    row.innerHTML=`<div>${label}</div><input type="text" readonly placeholder="길이 (m)" value="${displayValue}">`;
     const input=row.querySelector('input');
     input.addEventListener('click', inputClickHandler);
     prodList.appendChild(row);
@@ -539,6 +572,8 @@ function initializeProdInputs(){
 totalInput.addEventListener('click', inputClickHandler);
 marginInput.addEventListener('click', inputClickHandler);
 passwordModalInput.addEventListener('click', inputClickHandler);
+multiLengthInput.addEventListener('click', inputClickHandler);
+multiQtyInput.addEventListener('click', inputClickHandler);
 initializeProdInputs();
 
 softKeypad.addEventListener('click',(event)=>{
@@ -546,13 +581,21 @@ softKeypad.addEventListener('click',(event)=>{
     if(!key||!focusedInput) return;
     
     let val=focusedInput.value;
-    const isProdInput = focusedInput.closest('.prod-panel') !== null;
     
     if(key==='enter'){
         if(focusedInput === passwordModalInput) {
              pwdConfirmBtn.click();
              return;
         }
+        if (focusedInput === multiLengthInput) { // 길이 입력 후 수량으로 자동 포커스 이동
+            multiQtyInput.click();
+            return;
+        }
+        if (focusedInput === multiQtyInput) { // 수량 입력 후 추가하기 버튼 클릭
+            multiConfirmBtn.click();
+            return;
+        }
+
         const allInputs = getAllInputs();
         const idx = allInputs.indexOf(focusedInput);
         removeFocus(focusedInput); focusedInput=null;
@@ -565,15 +608,15 @@ softKeypad.addEventListener('click',(event)=>{
         focusedInput.value=val.slice(0,-1);
     }
     else if(key==='.'){
-        if(isProdInput || focusedInput === passwordModalInput) return;
+        if(dotKey.style.display === 'none') return;
         if(!val.includes('.')) focusedInput.value=val+'.';
     }
     else if(key>='0'&&key<='9'){
-        if(isProdInput || focusedInput === passwordModalInput) {
-            focusedInput.value=val+key;
-        } else if (focusedInput === totalInput || focusedInput === marginInput) {
+        if (focusedInput === totalInput || focusedInput === marginInput) {
             if(val.includes('.')){ const dec=val.split('.')[1]; if(dec && dec.length>=2) return; }
             focusedInput.value=val+key;
+        } else {
+             focusedInput.value=val+key;
         }
     }
 });
@@ -581,7 +624,7 @@ softKeypad.addEventListener('click',(event)=>{
 document.addEventListener('click',(event)=>{
     const isInput = event.target.tagName === 'INPUT';
     const isInKeypad = event.target.closest('#softKeypad');
-    const isInModal = event.target.closest('#customModalOverlay') || event.target.closest('#passwordModalOverlay');
+    const isInModal = event.target.closest('.custom-modal-overlay');
     const isInRecordItem = event.target.closest('.record-item');
 
     if (isInModal || isInRecordItem) return;
@@ -626,8 +669,8 @@ function buildCutPlan(){
     if(isNaN(total_m)||total_m<=0){ showModal('경고','총 원단 길이(m)를 0보다 크게 입력해 주세요.',false); return false; }
 
     const margin_perc = parseFloat(marginInput.value) || 0;
-    const lens_mm=[]; let isValid=true;
-    prodList.querySelectorAll('input').forEach((i,idx)=>{
+    const lens_mm=[];
+    prodList.querySelectorAll('input').forEach((i)=>{
         const v_m=parseInt(i.value);
         if(!isNaN(v_m)&&v_m>0){
             const len_mm = Math.round(v_m * 1000);
@@ -644,8 +687,8 @@ function buildCutPlan(){
             lens_mm.push({len_mm, required_mm});
         }
     });
-    if(!isValid) return false;
-    if(lens_mm.length===0){ showModal('경고','유효한 제품 길이(m)를 1개 이상 입력해 주세요.',false); return false; }
+
+    if(lens_mm.length===0){ showModal('경고','유효한 제품 길이를 1개 이상 입력해 주세요.',false); return false; }
 
     cutPlan=[];
     let cumulative=0;
@@ -733,6 +776,8 @@ function showFullscreen(){
     });
     
     fsContainer.style.display = 'flex';
+    currentCutIndex = 0;
+    renderFullscreenCut(0);
 }
 
 calcBtn.addEventListener('click', () => {
@@ -810,23 +855,21 @@ pwdConfirmBtn.addEventListener('click', () => {
         passwordModalOverlay.style.display = 'none';
         processDelete();
     } else {
-        showModal('경고', '비밀번호가 일치하지 않습니다. 다시 시도해주세요.', false);
-        
-        setTimeout(() => {
-            if(customModalOverlay.style.display !== 'flex') {
-                showPasswordModal();
-            }
-        }, 500);
+        passwordModalOverlay.style.display = 'none';
+        showModal('경고', '비밀번호가 일치하지 않습니다. 다시 시도해주세요.', false, () => {
+            showPasswordModal();
+        });
     }
 });
 
 // 키보드 방향키로 풀스크린 재단 목록 넘기기
 document.addEventListener('keydown', (e) => {
     if (fsContainer.style.display === 'flex' && cutPlan.length > 0) {
-        if (e.key === 'ArrowRight' || e.key === ' ') { 
+        e.preventDefault();
+        if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'ArrowDown') { 
             currentCutIndex = (currentCutIndex + 1) % cutPlan.length;
             renderFullscreenCut(currentCutIndex);
-        } else if (e.key === 'ArrowLeft') { 
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { 
             currentCutIndex = (currentCutIndex - 1 + cutPlan.length) % cutPlan.length;
             renderFullscreenCut(currentCutIndex);
         } else if (e.key === 'Escape') {
@@ -834,6 +877,69 @@ document.addEventListener('keydown', (e) => {
         }
     }
 });
+
+function renderFullscreenCut(index) {
+    const allRows = document.querySelectorAll('#fsCuts .cut-row');
+    allRows.forEach((row, idx) => {
+        if (idx === index) {
+            row.style.backgroundColor = '#4a4a75'; // 강조 색상
+            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+            row.style.backgroundColor = '#2f2f50'; // 기본 색상
+        }
+    });
+}
+
+// "여러 개 추가" 기능
+addMultiBtn.addEventListener('click', () => {
+    multiLengthInput.value = '';
+    multiQtyInput.value = '';
+    multiAddModal.style.display = 'flex';
+    setTimeout(() => {
+        multiLengthInput.click();
+    }, 50);
+});
+
+multiCancelBtn.addEventListener('click', () => {
+    multiAddModal.style.display = 'none';
+    softKeypad.style.display = 'none';
+    removeFocus(focusedInput);
+    focusedInput = null;
+});
+
+multiConfirmBtn.addEventListener('click', () => {
+    const length = parseInt(multiLengthInput.value);
+    let quantity = parseInt(multiQtyInput.value);
+
+    if (isNaN(length) || length <= 0) {
+        showModal('입력 오류', '올바른 제품 길이를 입력하세요.', false);
+        return;
+    }
+    if (isNaN(quantity) || quantity <= 0) {
+        showModal('입력 오류', '올바른 수량을 입력하세요.', false);
+        return;
+    }
+
+    const allProdInputs = prodList.querySelectorAll('input');
+
+    for (const input of allProdInputs) {
+        if (quantity === 0) break;
+        if (input.value.trim() === '') {
+            input.value = length;
+            quantity--;
+        }
+    }
+
+    for (let i = 0; i < quantity; i++) {
+        createProdInput(length);
+    }
+    
+    multiAddModal.style.display = 'none';
+    softKeypad.style.display = 'none';
+    removeFocus(focusedInput);
+    focusedInput = null;
+});
+
 
 });
 </script>
