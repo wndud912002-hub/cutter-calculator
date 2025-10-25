@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>넘기기 작업 계산기 (시인성 개선)</title>
+<title>넘기기 작업 계산기 (최종 개선)</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
@@ -109,13 +109,17 @@ input{
 
 /* -------------------- 키패드 (개선) -------------------- */
 #softKeypad{
-    position: fixed; bottom: 0; left: 0; right: 0;
-    width: 100%; max-width: none;
-    background: #1c1c34; padding: 10px;
-    padding-bottom: calc(10px + env(safe-area-inset-bottom));
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
-    border-radius: 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
-    z-index: 10002; margin: 0; box-sizing: border-box;
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    width: 90%; max-width: 400px;
+    background:#252540; padding:10px;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap:8px;
+    border-radius:14px; box-shadow:0 8px 30px rgba(0,0,0,0.8);
+    z-index: 10002; margin: 0;
+}
+@media (orientation: portrait) {
+    #softKeypad {
+        bottom: 30vh; /* 세로 모드일 때만 화면 하단에서 30%만큼 띄움 */
+    }
 }
 .keypad-button{
     padding:18px; font-size:26px; font-weight:bold; background:#4a4a75;
