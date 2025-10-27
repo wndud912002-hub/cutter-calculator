@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>재단 길이 확인용 계산기 (정수 계산 버전)</title>
+<title>재단 길이 확인용 계산기 (최종)</title>
 <style>
 /* -------------------- 전역 스타일 -------------------- */
 html, body {
@@ -264,14 +264,14 @@ function buildCutPlan(){
                 margin_perc = globalMargin;
             }
             
-            // ★★★★★ 수정된 계산 로직 ★★★★★
             let required_m;
             if (v_m < 50) {
                 required_m = v_m + 1;
-            } else if (v_m < 100) { // 50 이상 ~ 100 미만
+            } else if (v_m < 100) {
                 required_m = v_m + 2;
-            } else { // 100 이상
-                required_m = Math.ceil(v_m * (1 + margin_perc / 100));
+            } else {
+                // ★★★★★ 수정된 부분: 올림 -> 반올림 ★★★★★
+                required_m = Math.round(v_m * (1 + margin_perc / 100));
             }
 
             products.push({
