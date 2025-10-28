@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>재단 길이 확인용 계산기 (정수 계산 버전)</title>
+<title>재단 길이 확인용 계산기 (최종)</title>
 <style>
 /* -------------------- 전역 스타일 -------------------- */
 html, body {
@@ -13,10 +13,20 @@ html, body {
     overflow: hidden;
 }
 h1{
+    position: relative;
     text-align:center; margin:0; padding:16px; font-size:30px;
     color:#f0f0f0; background:#1a1a2e;
     border-bottom: 1px solid #3e3e60;
 }
+#version-display {
+    position: absolute;
+    top: 8px;
+    right: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #888;
+}
+
 
 /* -------------------- 메인 2분할 레이아웃 -------------------- */
 .main-container {
@@ -85,7 +95,6 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 .prod-panel .buttons button#addMultiProd { flex: 1.5; }
 .prod-panel .buttons button#addProd { flex: 1; }
-.prod-panel .buttons button#removeProd { flex: 1; }
 
 .main-actions {
     margin-top: 20px;
@@ -101,6 +110,24 @@ input[type="number"]::-webkit-inner-spin-button {
 
 .buttons button.btn-primary {background: #2ecc71;}
 .buttons button:active{filter: brightness(0.9);}
+
+/* 개별 삭제 버튼 스타일 */
+.btn-delete-row {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-left: 5px;
+    flex-shrink: 0;
+}
+.btn-delete-row:hover {
+    background: #c0392b;
+}
 
 
 /* -------------------- 결과값 패널 (시인성 극대화) -------------------- */
@@ -148,14 +175,17 @@ input[type="number"]::-webkit-inner-spin-button {
 </style>
 </head>
 <body>
-<h1>재단 길이 확인용 계산기</h1>
+<h1>
+    재단 길이 확인용 계산기
+    <span id="version-display">v2.5 (개별 삭제)</span>
+</h1>
 <div class="main-container">
     <div class="input-section">
         <div class="info-panel">
             <label>총 원단 길이 (m)</label>
-            <input type="number" id="totalInput" placeholder="예: 501.54">
+            <input type="number" id="totalInput" step="0.01" placeholder="예: 501.54">
             <label>기본 여유율 (%)</label>
-            <input type="number" id="marginInput" placeholder="예: 2" value="2">
+            <input type="number" id="marginInput" step="0.01" placeholder="예: 2" value="2">
         </div>
 
         <div class="prod-panel">
@@ -164,7 +194,6 @@ input[type="number"]::-webkit-inner-spin-button {
             <div class="buttons">
                 <button id="addMultiProd" type="button" class="btn-primary">+ 여러 개 추가</button>
                 <button id="addProd" type="button">+ 1개 추가</button>
-                <button id="removeProd" type="button">- 제품 제거</button>
             </div>
         </div>
 
@@ -188,10 +217,10 @@ input[type="number"]::-webkit-inner-spin-button {
         <div class="modal-message">추가할 제품의 길이와 수량을 입력하세요.</div>
         
         <label>제품 길이 (m)</label>
-        <input type="number" id="multiProdLengthInput" placeholder="예: 100">
+        <input type="number" id="multiProdLengthInput" step="0.01" placeholder="예: 100">
         
         <label style="margin-top:15px;">수량</label>
-        <input type="number" id="multiProdQtyInput" placeholder="예: 5">
+        <input type="number" id="multiProdQtyInput" step="1" placeholder="예: 5">
 
         <div class="modal-buttons" style="margin-top:20px;">
             <button id="multiCancelBtn" type="button">취소</button>
@@ -209,7 +238,6 @@ const prodList = document.getElementById('prodList');
 const totalInput = document.getElementById('totalInput');
 const marginInput = document.getElementById('marginInput');
 const addBtn = document.getElementById('addProd');
-const removeBtn = document.getElementById('removeProd');
 const calcBtn = document.getElementById('calcBtn');
 const resetBtn = document.getElementById('resetBtn');
 const resultList = document.getElementById('resultList');
@@ -226,21 +254,39 @@ function initializeProdInputs(){
     for(let i=0; i<8; i++) {
         createProdInput();
     }
+    applyGlobalMargin();
 }
 
 function createProdInput(length = '', margin = ''){
-    const count = prodList.querySelectorAll('.prod-row').length + 1;
-    if(count > MAX_PROD) return;
-    
     const row = document.createElement('div');
     row.className = 'prod-row';
+    
+    // 개별 삭제 버튼 추가
     row.innerHTML = `
-        <div class="prod-label">제품 ${count}</div>
-        <input type="number" class="prod-len-input" placeholder="길이 (m)" value="${length}">
-        <input type="number" class="prod-margin-input" placeholder="여유율 (%)" value="${margin}">
+        <div class="prod-label"></div>
+        <input type="number" class="prod-len-input" step="0.01" placeholder="길이 (m)" value="${length}">
+        <input type="number" class="prod-margin-input" step="0.01" placeholder="여유율 (%)" value="${margin}">
+        <button type="button" class="btn-delete-row">X</button>
     `;
+
+    // 삭제 버튼에 이벤트 연결
+    row.querySelector('.btn-delete-row').addEventListener('click', () => {
+        row.remove();
+        updateProdLabels(); // 삭제 후 라벨 재정렬
+    });
+
     prodList.appendChild(row);
+    updateProdLabels(); // 추가 후 라벨 재정렬
 }
+
+// 제품 라벨을 순서대로 다시 정렬하는 함수
+function updateProdLabels() {
+    const rows = prodList.querySelectorAll('.prod-row');
+    rows.forEach((row, index) => {
+        row.querySelector('.prod-label').textContent = `제품 ${index + 1}`;
+    });
+}
+
 
 function buildCutPlan(){
     const total_m = parseFloat(totalInput.value);
@@ -264,14 +310,13 @@ function buildCutPlan(){
                 margin_perc = globalMargin;
             }
             
-            // ★★★★★ 수정된 계산 로직 ★★★★★
             let required_m;
             if (v_m < 50) {
                 required_m = v_m + 1;
-            } else if (v_m < 100) { // 50 이상 ~ 100 미만
+            } else if (v_m < 100) {
                 required_m = v_m + 2;
-            } else { // 100 이상
-                required_m = Math.ceil(v_m * (1 + margin_perc / 100));
+            } else {
+                required_m = Math.round(v_m * (1 + margin_perc / 100));
             }
 
             products.push({
@@ -323,10 +368,10 @@ function renderResult(cutPlan){
             <div class="cut-left">
                 <div class="prod-name-row">
                     <div class="prod-name">제품 ${item.index}</div>
-                    <div class="main-prod-len">${item.prodLen_m.toFixed(0)} m</div>
+                    <div class="main-prod-len">${item.prodLen_m.toFixed(2)} m</div>
                 </div>
                 <div class="prod-len-sub-info">
-                    (여유율 ${item.margin_perc}%) → <b>필요: ${item.required_m}m</b>
+                    (여유율 ${item.margin_perc}) → <b>필요: ${item.required_m}m</b>
                 </div>
             </div>
             <div class="cut-pos">${item.cutPos} m</div>
@@ -337,12 +382,8 @@ function renderResult(cutPlan){
 
 function applyGlobalMargin() {
     const globalMarginValue = marginInput.value;
-    if (globalMarginValue.trim() === '') return;
-
     prodList.querySelectorAll('.prod-margin-input').forEach(input => {
-        if (input.value.trim() === '') {
-            input.value = globalMarginValue;
-        }
+        input.value = globalMarginValue;
     });
 }
 
@@ -350,14 +391,7 @@ addBtn.addEventListener('click', () => {
     createProdInput();
     applyGlobalMargin();
 });
-removeBtn.addEventListener('click', () => {
-    const rows = prodList.querySelectorAll('.prod-row');
-    if(rows.length > 1) {
-        prodList.removeChild(rows[rows.length - 1]);
-    } else {
-        alert("최소 1개 제품은 유지해야 합니다.");
-    }
-});
+
 calcBtn.addEventListener('click', buildCutPlan);
 resetBtn.addEventListener('click', () => {
     if(confirm('모든 입력값을 초기화하시겠습니까?')){
@@ -368,7 +402,6 @@ resetBtn.addEventListener('click', () => {
     }
 });
 
-totalInput.addEventListener('change', applyGlobalMargin);
 marginInput.addEventListener('input', applyGlobalMargin);
 
 addMultiBtn.addEventListener('click', () => {
