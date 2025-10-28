@@ -53,7 +53,25 @@ h1{
 }
 
 /* -------------------- 입력 패널 스타일 -------------------- */
-.info-panel { padding-bottom: 20px; border-bottom: 1px solid #3e3e60; }
+.info-panel, .multi-add-panel { 
+    padding-bottom: 20px; 
+    border-bottom: 1px solid #3e3e60; 
+}
+.multi-add-panel {
+    padding-top: 15px;
+}
+.multi-add-panel .input-group {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+}
+.multi-add-panel .input-group > div {
+    flex: 1;
+}
+.multi-add-panel button {
+    height: 47px; /* 입력창 높이에 맞춤 */
+}
+
 .prod-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 
 label {
@@ -93,8 +111,6 @@ input[type="number"]::-webkit-inner-spin-button {
     margin-top: 20px;
     padding-top: 0;
 }
-.prod-panel .buttons button#addMultiProd { flex: 1.5; }
-.prod-panel .buttons button#addProd { flex: 1; }
 
 .main-actions {
     margin-top: 20px;
@@ -111,7 +127,6 @@ input[type="number"]::-webkit-inner-spin-button {
 .buttons button.btn-primary {background: #2ecc71;}
 .buttons button:active{filter: brightness(0.9);}
 
-/* 개별 삭제 버튼 스타일 */
 .btn-delete-row {
     background: #e74c3c;
     color: white;
@@ -163,21 +178,12 @@ input[type="number"]::-webkit-inner-spin-button {
     margin-left: 20px;
 }
 
-/* -------------------- 모달 -------------------- */
-.custom-modal-overlay{display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:10001; justify-content:center; align-items:center; padding:20px;}
-.custom-modal-content{background:#252540; padding:25px; border-radius:15px; width:90%; max-width:400px; box-shadow:0 0 20px rgba(0,0,0,0.5); text-align:center;}
-.modal-title{font-size:22px; font-weight:700; color:#3498db; margin-bottom:15px;}
-.modal-message{font-size:16px; color:#ccc; margin-bottom:20px; white-space:pre-wrap;}
-.modal-buttons button{padding:10px 20px; font-size:16px; border-radius:8px; border:none; font-weight:700; transition:background 0.2s; cursor:pointer;}
-#modalConfirmBtn{background:#3a79d8; color:#fff; margin-left:10px;}
-#modalCancelBtn{background:#555; color:#fff;}
-
 </style>
 </head>
 <body>
 <h1>
     재단 길이 확인용 계산기
-    <span id="version-display">v2.5 (개별 삭제)</span>
+    <span id="version-display">v2.7 (UI 개선)</span>
 </h1>
 <div class="main-container">
     <div class="input-section">
@@ -188,11 +194,23 @@ input[type="number"]::-webkit-inner-spin-button {
             <input type="number" id="marginInput" step="0.01" placeholder="예: 2" value="2">
         </div>
 
+        <div class="multi-add-panel">
+             <label>여러 개 추가</label>
+            <div class="input-group">
+                <div>
+                    <input type="number" id="multiProdLengthInput" step="0.01" placeholder="길이 (m)">
+                </div>
+                 <div>
+                    <input type="number" id="multiProdQtyInput" step="1" placeholder="수량">
+                </div>
+                <button id="addMultiProd" type="button" class="btn-primary">추가</button>
+            </div>
+        </div>
+
         <div class="prod-panel">
             <label style="margin-top: 20px;">제품 목록</label>
             <div class="prod-list" id="prodList"></div>
             <div class="buttons">
-                <button id="addMultiProd" type="button" class="btn-primary">+ 여러 개 추가</button>
                 <button id="addProd" type="button">+ 1개 추가</button>
             </div>
         </div>
@@ -211,25 +229,6 @@ input[type="number"]::-webkit-inner-spin-button {
     </div>
 </div>
 
-<div id="multiAddModalOverlay" class="custom-modal-overlay">
-    <div class="custom-modal-content">
-        <div class="modal-title">제품 반복 추가</div>
-        <div class="modal-message">추가할 제품의 길이와 수량을 입력하세요.</div>
-        
-        <label>제품 길이 (m)</label>
-        <input type="number" id="multiProdLengthInput" step="0.01" placeholder="예: 100">
-        
-        <label style="margin-top:15px;">수량</label>
-        <input type="number" id="multiProdQtyInput" step="1" placeholder="예: 5">
-
-        <div class="modal-buttons" style="margin-top:20px;">
-            <button id="multiCancelBtn" type="button">취소</button>
-            <button id="multiConfirmBtn" type="button" style="background-color: #2ecc71;">추가하기</button>
-        </div>
-    </div>
-</div>
-
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
 const MAX_PROD = 30;
@@ -243,11 +242,8 @@ const resetBtn = document.getElementById('resetBtn');
 const resultList = document.getElementById('resultList');
 
 const addMultiBtn = document.getElementById('addMultiProd');
-const multiAddModal = document.getElementById('multiAddModalOverlay');
 const multiLengthInput = document.getElementById('multiProdLengthInput');
 const multiQtyInput = document.getElementById('multiProdQtyInput');
-const multiConfirmBtn = document.getElementById('multiConfirmBtn');
-const multiCancelBtn = document.getElementById('multiCancelBtn');
 
 function initializeProdInputs(){
     prodList.innerHTML = '';
@@ -261,7 +257,6 @@ function createProdInput(length = '', margin = ''){
     const row = document.createElement('div');
     row.className = 'prod-row';
     
-    // 개별 삭제 버튼 추가
     row.innerHTML = `
         <div class="prod-label"></div>
         <input type="number" class="prod-len-input" step="0.01" placeholder="길이 (m)" value="${length}">
@@ -269,17 +264,19 @@ function createProdInput(length = '', margin = ''){
         <button type="button" class="btn-delete-row">X</button>
     `;
 
-    // 삭제 버튼에 이벤트 연결
     row.querySelector('.btn-delete-row').addEventListener('click', () => {
-        row.remove();
-        updateProdLabels(); // 삭제 후 라벨 재정렬
+        if (prodList.querySelectorAll('.prod-row').length > 1) {
+            row.remove();
+            updateProdLabels();
+        } else {
+            alert("최소 1개 제품은 유지해야 합니다.");
+        }
     });
 
     prodList.appendChild(row);
-    updateProdLabels(); // 추가 후 라벨 재정렬
+    updateProdLabels();
 }
 
-// 제품 라벨을 순서대로 다시 정렬하는 함수
 function updateProdLabels() {
     const rows = prodList.querySelectorAll('.prod-row');
     rows.forEach((row, index) => {
@@ -405,24 +402,17 @@ resetBtn.addEventListener('click', () => {
 marginInput.addEventListener('input', applyGlobalMargin);
 
 addMultiBtn.addEventListener('click', () => {
-    multiLengthInput.value = '';
-    multiQtyInput.value = '';
-    multiAddModal.style.display = 'flex';
-    multiLengthInput.focus();
-});
-
-multiCancelBtn.addEventListener('click', () => multiAddModal.style.display = 'none');
-
-multiConfirmBtn.addEventListener('click', () => {
     const length = parseFloat(multiLengthInput.value);
     let quantity = parseInt(multiQtyInput.value);
 
     if (isNaN(length) || length <= 0) {
         alert('올바른 제품 길이를 입력하세요.');
+        multiLengthInput.focus();
         return;
     }
     if (isNaN(quantity) || quantity <= 0) {
         alert('올바른 수량을 입력하세요.');
+        multiQtyInput.focus();
         return;
     }
 
@@ -440,7 +430,9 @@ multiConfirmBtn.addEventListener('click', () => {
     }
     
     applyGlobalMargin();
-    multiAddModal.style.display = 'none';
+    multiLengthInput.value = '';
+    multiQtyInput.value = '';
+    multiLengthInput.focus();
 });
 
 
@@ -458,7 +450,7 @@ document.addEventListener('keydown', (e) => {
         return;
     }
     if (target === multiQtyInput) {
-        multiConfirmBtn.click();
+        addMultiBtn.click();
         return;
     }
     
