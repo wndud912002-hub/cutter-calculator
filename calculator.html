@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>넘기기 작업 계산기 (최종 개선)</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -15,8 +15,17 @@ html, body {
     overflow: hidden;
 }
 h1{
+    position: relative; /* 버전 표시를 위한 기준점 */
     text-align:center; margin:0; padding:16px; font-size:30px;
-    color:#f0f0f0; position: relative; z-index: 2; background:#1a1a2e;
+    color:#f0f0f0; background:#1a1a2e;
+}
+#version-display {
+    position: absolute;
+    top: 8px;
+    right: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #888;
 }
 .content-wrapper {
     position: absolute; top:62px; left:0; right:0; bottom:0;
@@ -74,9 +83,9 @@ input{
     flex-grow: 1; margin-top:10px; max-height: 40vh;
     overflow-y:auto; padding-right:10px;
 }
-.prod-row{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;}
+.prod-row{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; gap: 8px;}
 .prod-row div{font-size:15px; font-weight:600; min-width:70px; margin-bottom:0;}
-.prod-row input{width:calc(100% - 80px) !important; padding:8px 12px;}
+.prod-row input{width:100% !important; flex: 1;}
 
 .record-item{
     display:flex; justify-content:space-between; align-items:center;
@@ -93,6 +102,21 @@ input{
 .record-date{font-size:13px; color:#b0b0d0;}
 .record-summary{font-size:15px; font-weight:700;}
 
+/* 여러 개 추가 UI */
+.multi-add-panel { 
+    padding-top: 15px;
+    padding-bottom: 15px; 
+    border-bottom: 1px solid #3e3e60; 
+}
+.multi-add-panel .input-group {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+}
+.multi-add-panel .input-group > div { flex: 1; }
+.multi-add-panel button { height: 47px; flex: 0.8; }
+
+
 /* -------------------- 미리보기 -------------------- */
 .cuts{width:90%; max-width:700px; margin:0 auto 20px auto; text-align:center;}
 .cuts h3{margin-bottom:10px; color:#3498db; font-size:20px;}
@@ -102,19 +126,18 @@ input{
     padding:12px 15px; border-radius:12px; background:#252540;
     margin-bottom:6px; box-shadow:0 2px 8px rgba(0,0,0,0.2);
 }
-.cut-left{display:flex; flex-direction:column; text-align:left;}
+.cut-left{display:flex; flex-direction:column; text-align:left; gap: 4px;}
 .cut-row .prod-name{font-size:18px; font-weight:700; color:#3498db;}
-.cut-row .prod-len{font-size:11px; color:#b0b0d0;}
+.cut-row .prod-len{font-size:12px; color:#b0b0d0;}
+.cut-row .prod-len b { color: #2ecc71; font-weight: 700; }
 .cut-row .cut-pos{font-size:30px; font-weight:900; color:#e74c3c;}
 
-/* -------------------- 키패드 (개선) -------------------- */
+/* -------------------- 키패드 -------------------- */
 #softKeypad{
     position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-    width: 90%; max-width: 400px;
-    background:#252540; padding:10px;
+    width:90%; max-width:400px; background:#252540; padding:10px;
     display: grid; grid-template-columns: repeat(4, 1fr); gap:8px;
-    border-radius:14px; box-shadow:0 8px 30px rgba(0,0,0,0.8);
-    z-index: 10002; margin: 0;
+    border-radius:14px; box-shadow:0 8px 30px rgba(0,0,0,0.8); z-index:10002; margin: 0;
 }
 @media (orientation: portrait) {
     #softKeypad {
@@ -211,6 +234,7 @@ input{
 #fsCuts .prod-name{font-size:30px; font-weight:900; color:#3498db;}
 #fsCuts .main-len{font-size:32px; font-weight:900; color: #f0f0f0;}
 #fsCuts .required-len{font-size:16px; color:#b0b0d0; font-weight:500; margin-top: 4px;}
+#fsCuts .required-len b { color: #2ecc71; font-weight: 700; font-size: 18px; }
 #fsCuts .cut-pos{
     flex: 1;
     text-align: center;
@@ -219,68 +243,78 @@ input{
     color:#e74c3c;
 }
 
-/* -------------------- 모달 -------------------- */
+/* 모달 및 개별 삭제 버튼 */
 .custom-modal-overlay{display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:10001; justify-content:center; align-items:center; padding:20px;}
-#multiAddModalOverlay {
-    align-items: flex-start;
-    padding-top: 5vh;
-}
 .custom-modal-content{background:#252540; padding:25px; border-radius:15px; width:90%; max-width:400px; box-shadow:0 0 20px rgba(0,0,0,0.5); text-align:center;}
 .modal-title{font-size:22px; font-weight:700; color:#3498db; margin-bottom:15px;}
 .modal-message{font-size:16px; color:#ccc; margin-bottom:20px; white-space:pre-wrap;}
 .modal-buttons button{padding:10px 20px; font-size:16px; border-radius:8px; border:none; font-weight:700; transition:background 0.2s; cursor:pointer;}
-#passwordModalInput{
-    width:100%; padding:10px; font-size:20px; border-radius:8px;
-    border:1px solid #3e3e60; margin-top:10px; background:#333355;
-    color:#fff; box-sizing:border-box; text-align:center;
-}
+#passwordModalInput{ width:100%; padding:10px; font-size:20px; border-radius:8px; border:1px solid #3e3e60; margin-top:10px; background:#333355; color:#fff; box-sizing:border-box; text-align:center; }
 #modalConfirmBtn{background:#3a79d8; color:#fff; margin-left:10px;}
-#modalConfirmBtn:active{background:#2a69c8;}
 #modalCancelBtn{background:#555; color:#fff;}
-#modalCancelBtn:active{background:#444;}
 #passwordModalOverlay .modal-buttons button {width: 48%;}
 #pwdConfirmBtn {background: #e74c3c !important;}
 #pwdConfirmBtn:active {background: #c0392b !important;}
+.btn-delete-row {
+    background: #e74c3c; color: white; border: none; border-radius: 50%;
+    width: 28px; height: 28px; font-size: 14px; font-weight: bold;
+    cursor: pointer; margin-left: 5px; flex-shrink: 0;
+}
+.btn-delete-row:hover { background: #c0392b; }
 
 </style>
 </head>
-<body onload="loadResults()">
-<h1>넘기기 작업 계산기</h1>
+<body>
+<h1>
+    넘기기 작업 계산기
+    <span id="version-display">v1.6 (반올림 개선)</span>
+</h1>
 <div class="content-wrapper">
-    <div class="top-area">
-        <div class="info-panel">
-            <label>총 원단 길이 (m)</label>
-            <input type="text" readonly id="totalInput" placeholder="예: 501.54">
-            <label>여유율 (%)</label>
-            <input type="text" readonly id="marginInput" placeholder="예: 2" value="2">
-            <div class="buttons">
-                <button id="calcBtn" type="button" class="btn-primary">계산하기</button>
-                <button id="resetBtn" type="button">초기화</button>
-                <button id="fsBtn" type="button">작업표</button>
+<div class="top-area">
+<div class="info-panel">
+<label>총 원단 길이 (m)</label>
+<input type="text" readonly id="totalInput" placeholder="예: 501.54">
+<label>여유율 (%)</label>
+<input type="text" readonly id="marginInput" placeholder="예: 2" value="2">
+<div class="buttons">
+<button id="calcBtn" type="button" class="btn-primary">계산하기</button>
+<button id="resetBtn" type="button">초기화</button>
+<button id="fsBtn" type="button">작업표</button>
+</div>
+</div>
+<div class="prod-panel">
+    <div class="multi-add-panel">
+        <label>여러 개 추가</label>
+        <div class="input-group">
+            <div>
+                <input type="text" readonly id="multiProdLengthInput" placeholder="길이 (m)">
             </div>
-        </div>
-        <div class="prod-panel">
-            <label>제품 길이 (m)</label>
-            <div class="prod-list" id="prodList"></div>
-            <div class="buttons">
-                <button id="addProd" type="button">+ 1개 추가</button>
-                <button id="addMultiProd" type="button" class="btn-primary">+ 여러 개 추가</button>
-                <button id="removeProd" type="button">- 제품 제거</button>
+             <div>
+                <input type="text" readonly id="multiProdQtyInput" placeholder="수량">
             </div>
-        </div>
-        <div class="record-panel">
-            <label>저장된 계산 기록</label>
-            <div class="record-list" id="recordList">
-                <div style="padding:15px; text-align:center; color:#ccc;">저장된 기록이 없습니다.</div>
-            </div>
+            <button id="addMultiProd" type="button" class="btn-primary">추가</button>
         </div>
     </div>
-    <div class="cuts" id="previewCuts">
-        <h3>계산 결과 미리보기 (재단 위치)</h3>
-        <div class="preview-cuts-list" id="previewCutsList">
-            <div style="padding:15px; text-align:center; color:#ccc;">계산된 재단 목록이 없습니다.</div>
-        </div>
+
+    <label style="margin-top: 15px;">제품 목록</label>
+    <div class="prod-list" id="prodList"></div>
+    <div class="buttons" style="padding-top: 10px;">
+        <button id="addProd" type="button">+ 1개 추가</button>
     </div>
+</div>
+<div class="record-panel">
+    <label>저장된 계산 기록</label>
+    <div class="record-list" id="recordList">
+        <div style="padding:15px; text-align:center; color:#ccc;">저장된 기록이 없습니다.</div>
+    </div>
+</div>
+</div>
+<div class="cuts" id="previewCuts">
+<h3>계산 결과 미리보기 (재단 위치)</h3>
+<div class="preview-cuts-list" id="previewCutsList">
+    <div style="padding:15px; text-align:center; color:#ccc;">계산된 재단 목록이 없습니다.</div>
+</div>
+</div>
 </div>
 
 <div id="softKeypad" style="display: none;">
@@ -342,27 +376,9 @@ input{
     </div>
 </div>
 
-<div id="multiAddModalOverlay" class="custom-modal-overlay">
-    <div class="custom-modal-content">
-        <div class="modal-title">제품 반복 추가</div>
-        <div class="modal-message">추가할 제품의 길이와 수량을 입력하세요.</div>
-        
-        <label>제품 길이 (m)</label>
-        <input type="text" readonly id="multiProdLengthInput" placeholder="예: 100">
-        
-        <label style="margin-top:15px;">수량</label>
-        <input type="text" readonly id="multiProdQtyInput" placeholder="예: 5">
-
-        <div class="modal-buttons" style="margin-top:20px;">
-            <button id="multiCancelBtn" type="button">취소</button>
-            <button id="multiConfirmBtn" type="button" class="btn-primary" style="background-color: #2ecc71;">추가하기</button>
-        </div>
-    </div>
-</div>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-const MAX_PROD = 20;
+const MAX_PROD = 30;
 const STORAGE_KEY = 'cutCalculatorRecords';
 const DELETE_PASSWORD = '1205';
 
@@ -371,7 +387,6 @@ const recordList = document.getElementById('recordList');
 const totalInput = document.getElementById('totalInput');
 const marginInput = document.getElementById('marginInput');
 const addBtn = document.getElementById('addProd');
-const removeBtn = document.getElementById('removeProd');
 const calcBtn = document.getElementById('calcBtn');
 const resetBtn = document.getElementById('resetBtn');
 const previewCutsList = document.getElementById('previewCutsList');
@@ -396,12 +411,8 @@ const pwdConfirmBtn = document.getElementById('pwdConfirmBtn');
 const pwdCancelBtn = document.getElementById('pwdCancelBtn');
 
 const addMultiBtn = document.getElementById('addMultiProd');
-const multiAddModal = document.getElementById('multiAddModalOverlay');
 const multiLengthInput = document.getElementById('multiProdLengthInput');
 const multiQtyInput = document.getElementById('multiProdQtyInput');
-const multiConfirmBtn = document.getElementById('multiConfirmBtn');
-const multiCancelBtn = document.getElementById('multiCancelBtn');
-
 
 let cutPlan = [];
 let focusedInput = null;
@@ -409,26 +420,17 @@ let modalCallback = null;
 let currentDeleteId = null;
 let currentCutIndex = 0;
 
-// ==========================================
-// 기록 저장 및 불러오기 로직
-// ==========================================
 function getRecords(){
     try {
         const json = localStorage.getItem(STORAGE_KEY);
         return json ? JSON.parse(json) : [];
-    } catch (e) {
-        console.error("Error reading localStorage:", e);
-        return [];
-    }
+    } catch (e) { console.error("Error reading localStorage:", e); return []; }
 }
 
 function saveRecords(records){
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-    } catch (e) {
-        console.error("Error writing localStorage:", e);
-        showModal('저장 오류', '계산 기록을 기기에 저장하는 데 실패했습니다.', false);
-    }
+    } catch (e) { console.error("Error writing localStorage:", e); showModal('저장 오류', '계산 기록을 기기에 저장하는 데 실패했습니다.', false); }
 }
 
 function saveResult(){
@@ -466,7 +468,7 @@ function restoreRecord(record){
     }
     cutPlan = record.cutPlan;
     renderPreview();
-    showModal('기록 불러오기','선택한 기록으로 계산기 입력값이 복원되었습니다. 재계산 또는 전체화면을 확인하세요.',false);
+    showModal('기록 불러오기','선택한 기록으로 계산기 입력값이 복원되었습니다.',false);
 }
 
 function deleteRecord(id){
@@ -530,9 +532,7 @@ window.loadResults = function() {
 // 키패드 및 입력 로직
 // ==========================================
 function getAllInputs() {
-    const allInputs = [totalInput, marginInput];
-    prodList.querySelectorAll('input').forEach(input => allInputs.push(input));
-    return allInputs;
+    return [totalInput, marginInput, multiLengthInput, multiQtyInput, ...prodList.querySelectorAll('input')];
 }
 
 function removeFocus(input) {
@@ -545,54 +545,34 @@ function inputClickHandler(event){
     focusedInput.style.border='1px solid #3498db';
     softKeypad.style.display='grid';
     
-    const isProdInput = focusedInput.closest('.prod-panel') !== null;
-    const isPwdInput = focusedInput === passwordModalInput;
-
-    if (isProdInput || isPwdInput || focusedInput === multiLengthInput || focusedInput === multiQtyInput) {
+    const isIntOnly = focusedInput.closest('.prod-panel') !== null || focusedInput === passwordModalInput || focusedInput === multiLengthInput || focusedInput === multiQtyInput;
+    
+    if (isIntOnly) {
         dotKey.classList.add('disabled');
     } else {
         dotKey.classList.remove('disabled');
     }
-
-    if(focusedInput !== passwordModalInput && !focusedInput.closest('#multiAddModalOverlay')) {
-        setTimeout(()=>{
-            const keypadHeight = softKeypad.offsetHeight;
-            const inputRect = focusedInput.getBoundingClientRect();
-            const viewportHeight = window.innerHeight;
-            const contentWrapper = document.querySelector('.content-wrapper');
-            const currentScroll = contentWrapper.scrollTop;
-            const keypadTopOnViewport = viewportHeight - keypadHeight - 20;
-            const inputBottomOnViewport = inputRect.bottom;
-            
-            if (inputBottomOnViewport > keypadTopOnViewport) {
-                const scrollOffset = inputBottomOnViewport - keypadTopOnViewport + 10;
-                contentWrapper.scrollTo({ top: currentScroll + scrollOffset, behavior: 'smooth' });
-            } else if (inputRect.top < 0) {
-                 contentWrapper.scrollTo({ top: currentScroll + inputRect.top - 10, behavior: 'smooth' });
-            }
-        }, 100);
-    }
 }
 
-function createProdInput(value){
-    const count = prodList.querySelectorAll('.prod-row').length + 1;
-    if(count>MAX_PROD) return;
-    
-    const label = `제품 ${count}`;
-
+function createProdInput(value=''){
     const row=document.createElement('div');
     row.className='prod-row';
-    const displayValue = value!==undefined && !isNaN(parseFloat(value)) ? Math.floor(parseFloat(value)) : '';
-    row.innerHTML=`<div>${label}</div><input type="text" readonly placeholder="길이 (m)" value="${displayValue}">`;
-    const input=row.querySelector('input');
-    input.addEventListener('click', inputClickHandler);
-    prodList.appendChild(row);
-
-    setTimeout(() => {
-        if (prodList.scrollHeight > prodList.clientHeight) {
-            prodList.scrollTop = prodList.scrollHeight;
+    row.innerHTML=`
+        <div></div>
+        <input type="text" readonly placeholder="길이 (m)" value="${value}">
+        <button type="button" class="btn-delete-row">X</button>
+    `;
+    row.querySelector('input').addEventListener('click', inputClickHandler);
+    row.querySelector('.btn-delete-row').addEventListener('click', () => {
+        if (prodList.querySelectorAll('.prod-row').length > 1) {
+            row.remove();
+            updateProdLabels();
+        } else {
+            showModal('경고', "최소 1개 제품은 유지해야 합니다.", false);
         }
-    }, 100);
+    });
+    prodList.appendChild(row);
+    updateProdLabels();
 }
 
 function initializeProdInputs(){
@@ -602,6 +582,13 @@ function initializeProdInputs(){
     prodList.innerHTML='';
     cutPlan=[];
     for(let i=0;i<6;i++) createProdInput('');
+}
+
+function updateProdLabels() {
+    const rows = prodList.querySelectorAll('.prod-row');
+    rows.forEach((row, index) => {
+        row.querySelector('div').textContent = `제품 ${index + 1}`;
+    });
 }
 
 totalInput.addEventListener('click', inputClickHandler);
@@ -618,18 +605,9 @@ softKeypad.addEventListener('click',(event)=>{
     let val=focusedInput.value;
     
     if(key==='enter'){
-        if(focusedInput === passwordModalInput) {
-             pwdConfirmBtn.click();
-             return;
-        }
-        if (focusedInput === multiLengthInput) {
-            multiQtyInput.click();
-            return;
-        }
-        if (focusedInput === multiQtyInput) {
-            multiConfirmBtn.click();
-            return;
-        }
+        if(focusedInput === passwordModalInput) { pwdConfirmBtn.click(); return; }
+        if (focusedInput === multiLengthInput) { multiQtyInput.click(); return; }
+        if (focusedInput === multiQtyInput) { addMultiBtn.click(); return; }
 
         const allInputs = getAllInputs();
         const idx = allInputs.indexOf(focusedInput);
@@ -649,10 +627,8 @@ softKeypad.addEventListener('click',(event)=>{
     else if(key>='0'&&key<='9'){
         if (focusedInput === totalInput || focusedInput === marginInput) {
             if(val.includes('.')){ const dec=val.split('.')[1]; if(dec && dec.length>=2) return; }
-            focusedInput.value=val+key;
-        } else {
-             focusedInput.value=val+key;
         }
+        focusedInput.value=val+key;
     }
 });
 
@@ -674,21 +650,16 @@ document.addEventListener('click',(event)=>{
 // ==========================================
 // 버튼 및 계산 로직
 // ==========================================
-addBtn.addEventListener('click',()=>{createProdInput('');});
-removeBtn.addEventListener('click',()=>{
-    const rows=prodList.querySelectorAll('.prod-row');
-    if(rows.length===1){ showModal('경고',"최소한 1개의 제품은 유지해야 합니다.",false); return; }
-    const lastInput=rows[rows.length-1].querySelector('input');
-    if(focusedInput===lastInput){ removeFocus(focusedInput); focusedInput=null; softKeypad.style.display='none'; }
-    prodList.removeChild(rows[rows.length-1]);
-});
+addBtn.addEventListener('click',()=>createProdInput());
 
 resetBtn.addEventListener('click',(e)=>{
     e.preventDefault();
-    showModal('초기화 확인','모든 입력값과 계산 결과를 초기화하시겠습니까?\n(기록은 삭제되지 않습니다.)',true,(confirmed)=>{
+    showModal('초기화 확인','모든 입력값을 초기화하시겠습니까?\n(기록은 삭제되지 않습니다.)',true,(confirmed)=>{
         if(confirmed){
             totalInput.value='';
             marginInput.value='2';
+            multiLengthInput.value = '';
+            multiQtyInput.value = '';
             initializeProdInputs();
             previewCutsList.innerHTML='<div style="padding:15px; text-align:center; color:#ccc;">계산된 재단 목록이 없습니다.</div>';
             fsContainer.style.display='none';
@@ -698,48 +669,53 @@ resetBtn.addEventListener('click',(e)=>{
 
 function buildCutPlan(){
     softKeypad.style.display='none'; removeFocus(focusedInput); focusedInput=null;
-    const total_m=parseFloat(totalInput.value);
-    const total_mm=Math.round(total_m*1000);
+    const total_m = parseFloat(totalInput.value);
     
-    if(isNaN(total_m)||total_m<=0){ showModal('경고','총 원단 길이(m)를 0보다 크게 입력해 주세요.',false); return false; }
-
+    if(isNaN(total_m) || total_m <= 0){
+        showModal('경고','총 원단 길이를 0보다 크게 입력해 주세요.',false);
+        return false;
+    }
+    const total_mm = Math.round(total_m * 1000);
     const margin_perc = parseFloat(marginInput.value) || 0;
     const lens_mm=[];
     prodList.querySelectorAll('input').forEach((i)=>{
         const v_m=parseInt(i.value);
         if(!isNaN(v_m)&&v_m>0){
-            const len_mm = Math.round(v_m * 1000);
+            const len_mm = v_m * 1000;
             let required_mm;
             
             if (v_m < 50) {
                 required_mm = len_mm + 1000;
-            } else if (v_m >= 50 && v_m < 100) {
+            } else if (v_m < 100) {
                 required_mm = len_mm + 2000;
             } else {
-                required_mm = Math.ceil(len_mm * (1 + margin_perc / 100));
+                required_mm = Math.round(len_mm * (1 + margin_perc / 100));
             }
             
-            lens_mm.push({len_mm, required_mm});
+            lens_mm.push({len_mm, required_mm, v_m});
         }
     });
 
-    if(lens_mm.length===0){ showModal('경고','유효한 제품 길이를 1개 이상 입력해 주세요.',false); return false; }
+    if(lens_mm.length===0){
+        showModal('경고','유효한 제품 길이를 1개 이상 입력해 주세요.',false);
+        return false;
+    }
 
     cutPlan=[];
     let cumulative=0;
     for(let i=0;i<lens_mm.length;i++){
-        const item_mm = lens_mm[i];
-        const required_mm = item_mm.required_mm;
+        const item = lens_mm[i];
+        const required_mm = item.required_mm;
         cumulative+=required_mm;
-        if(cumulative>total_mm){
-            showModal('작업 중단 경고',`⛔ 작업 중단: 총 원단 길이를 초과했습니다!\n제품 ${i+1} (${(item_mm.len_mm/1000).toFixed(0)}m) 재단 시 총 원단 길이 (${total_m.toFixed(2)}m) 초과.`,false);
+        if(cumulative > total_mm){
+            showModal('작업 중단 경고',`⛔ 작업 중단: 총 원단 길이를 초과했습니다!\n제품 ${i+1} (${item.v_m}m) 재단 시 총 원단 길이 (${total_m.toFixed(2)}m) 초과.`,false);
             break;
         }
         const remaining_mm=total_mm-cumulative;
         cutPlan.push({
             index:i+1,
-            prodLen_m: (item_mm.len_mm/1000).toFixed(2),
-            required_m:(required_mm/1000).toFixed(2),
+            prodLen_m: (item.len_mm/1000),
+            required_m:(required_mm/1000),
             cutPos:Math.floor(remaining_mm/1000)
         });
     }
@@ -752,21 +728,16 @@ function renderPreview(){
     if(cutPlan.length===0){previewCutsList.innerHTML+='<div style="padding:15px;text-align:center;color:#ccc;">계산된 재단 목록이 없습니다.</div>'; return;}
     cutPlan.forEach(item=>{
         const row=document.createElement('div'); row.className='cut-row';
-        row.innerHTML=`<div class="cut-left"><div class="prod-name">제품 ${item.index}</div><div class="prod-len">${item.prodLen_m} m (필요 길이:${item.required_m} m)</div></div><div class="cut-pos">${item.cutPos} m</div>`;
+        row.innerHTML=`<div class="cut-left"><div class="prod-name">제품 ${item.index} (${item.prodLen_m}m)</div><div class="prod-len">필요 길이: <b>${Math.round(item.required_m)}m</b></div></div><div class="cut-pos">${item.cutPos} m</div>`;
         previewCutsList.appendChild(row);
     });
 }
-
-// ==========================================
-// 전체 화면 로직
-// ==========================================
 
 function showFullscreen(){
     if (cutPlan.length === 0) {
         showModal('알림', '먼저 계산을 수행하여 재단 목록을 만드세요.', false);
         return;
     }
-
     const lens = prodList.querySelectorAll('input');
     let subText = '';
     let validProductsCount = 0;
@@ -780,14 +751,10 @@ function showFullscreen(){
             validProductsCount++;
         }
     });
-
     fsSummary.innerText = `제품 수량: ${validProductsCount}개`;
-
     const total_m = totalInput.value ? parseFloat(totalInput.value).toFixed(2) : 'N/A';
     const margin_perc = marginInput.value ? parseFloat(marginInput.value).toFixed(0) : 'N/A';
-    
     fsInfo.innerText = `총 원단 길이: ${total_m} m\n여유율: ${margin_perc}%`;
-    
     fsSub.innerHTML = subText; 
 
     const fsCuts = document.getElementById('fsCuts');
@@ -795,18 +762,15 @@ function showFullscreen(){
     cutPlan.forEach(item => {
         const row = document.createElement('div'); row.className = 'cut-row';
         const label = `제품 ${item.index}`;
-        const integerProdLen = Math.floor(parseFloat(item.prodLen_m));
         
         row.innerHTML = `<div class="cut-left">
                             <div class="prod-name-row">
                                 <div class="prod-name">${label}</div>
-                                <div class="main-len">${integerProdLen} m</div>
+                                <div class="main-len">${item.prodLen_m} m</div>
                             </div>
-                            <div class="required-len">(필요 길이: ${item.required_m} m)</div>
+                            <div class="required-len">(필요 길이: <b>${Math.round(item.required_m)}m</b>)</div>
                         </div>
-                        <div class="cut-pos-panel">
-                            <div class="cut-pos">${item.cutPos} m</div>
-                        </div>`;
+                        <div class="cut-pos">${item.cutPos} m</div>`;
         fsCuts.appendChild(row);
     });
     
@@ -815,26 +779,13 @@ function showFullscreen(){
     renderFullscreenCut(0);
 }
 
-calcBtn.addEventListener('click', () => {
-    if (buildCutPlan()) {
-        if (cutPlan.length > 0) {
-            saveResult();
-            showFullscreen();
-        }
-    }
-});
-
+calcBtn.addEventListener('click', () => { if (buildCutPlan() && cutPlan.length > 0) { saveResult(); showFullscreen(); } });
 fsBtn.addEventListener('click', showFullscreen);
-
 exitBtn.addEventListener('click',()=>{fsContainer.style.display='none';});
 
-// ==========================================
-// 모달 및 비밀번호 로직
-// ==========================================
 function showModal(title,message,confirm=false,callback){
     passwordModalOverlay.style.display='none';
     softKeypad.style.display = 'none';
-
     modalTitle.innerText=title;
     modalMessage.innerText=message;
     modalConfirmBtn.style.display=confirm?'inline-block':'none';
@@ -852,59 +803,47 @@ function showModal(title,message,confirm=false,callback){
     customModalOverlay.style.display='flex';
     modalCallback=callback||null;
 }
-
-modalCancelBtn.addEventListener('click',()=>{
-    customModalOverlay.style.display='none';
-    if(modalCallback) modalCallback(false);
-});
-modalConfirmBtn.addEventListener('click',()=>{
-    customModalOverlay.style.display='none';
-    if(modalCallback) modalCallback(true);
-});
-
+modalCancelBtn.addEventListener('click',()=>{ customModalOverlay.style.display='none'; if(modalCallback) modalCallback(false); });
+modalConfirmBtn.addEventListener('click',()=>{ customModalOverlay.style.display='none'; if(modalCallback) modalCallback(true); });
 function showPasswordModal(){
     customModalOverlay.style.display='none';
-    
     passwordModalInput.value = '';
     passwordModalOverlay.style.display = 'flex';
-    setTimeout(() => {
-        passwordModalInput.click();
-    }, 50);
+    setTimeout(() => { passwordModalInput.click(); }, 50);
 }
-
 pwdCancelBtn.addEventListener('click', () => {
-    passwordModalOverlay.style.display = 'none';
-    softKeypad.style.display = 'none';
-    removeFocus(focusedInput);
-    focusedInput = null;
-    currentDeleteId = null;
+    passwordModalOverlay.style.display = 'none'; softKeypad.style.display = 'none';
+    removeFocus(focusedInput); focusedInput = null; currentDeleteId = null;
 });
-
 pwdConfirmBtn.addEventListener('click', () => {
-    softKeypad.style.display = 'none';
-    removeFocus(focusedInput);
-    focusedInput = null;
-
+    softKeypad.style.display = 'none'; removeFocus(focusedInput); focusedInput = null;
     const inputPwd = passwordModalInput.value;
     if (inputPwd === DELETE_PASSWORD) {
-        passwordModalOverlay.style.display = 'none';
-        processDelete();
+        passwordModalOverlay.style.display = 'none'; processDelete();
     } else {
         passwordModalOverlay.style.display = 'none';
-        showModal('경고', '비밀번호가 일치하지 않습니다. 다시 시도해주세요.', false, () => {
-            showPasswordModal();
-        });
+        showModal('경고', '비밀번호가 일치하지 않습니다.', false, () => { showPasswordModal(); });
     }
 });
 
-// 키보드 방향키로 풀스크린 재단 목록 넘기기
+function renderFullscreenCut(index) {
+    const allRows = document.querySelectorAll('#fsCuts .cut-row');
+    allRows.forEach((row, idx) => {
+        if (idx === index) {
+            row.style.backgroundColor = '#4a4a75';
+            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+            row.style.backgroundColor = '#2f2f50';
+        }
+    });
+}
 document.addEventListener('keydown', (e) => {
     if (fsContainer.style.display === 'flex' && cutPlan.length > 0) {
         e.preventDefault();
-        if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'ArrowDown') { 
+        if (['ArrowRight', ' ', 'ArrowDown'].includes(e.key)) { 
             currentCutIndex = (currentCutIndex + 1) % cutPlan.length;
             renderFullscreenCut(currentCutIndex);
-        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { 
+        } else if (['ArrowLeft', 'ArrowUp'].includes(e.key)) { 
             currentCutIndex = (currentCutIndex - 1 + cutPlan.length) % cutPlan.length;
             renderFullscreenCut(currentCutIndex);
         } else if (e.key === 'Escape') {
@@ -913,36 +852,7 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-function renderFullscreenCut(index) {
-    const allRows = document.querySelectorAll('#fsCuts .cut-row');
-    allRows.forEach((row, idx) => {
-        if (idx === index) {
-            row.style.backgroundColor = '#4a4a75'; // 강조 색상
-            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        } else {
-            row.style.backgroundColor = '#2f2f50'; // 기본 색상
-        }
-    });
-}
-
-// "여러 개 추가" 기능
 addMultiBtn.addEventListener('click', () => {
-    multiLengthInput.value = '';
-    multiQtyInput.value = '';
-    multiAddModal.style.display = 'flex';
-    setTimeout(() => {
-        multiLengthInput.click();
-    }, 50);
-});
-
-multiCancelBtn.addEventListener('click', () => {
-    multiAddModal.style.display = 'none';
-    softKeypad.style.display = 'none';
-    removeFocus(focusedInput);
-    focusedInput = null;
-});
-
-multiConfirmBtn.addEventListener('click', () => {
     const length = parseInt(multiLengthInput.value);
     let quantity = parseInt(multiQtyInput.value);
 
@@ -956,7 +866,6 @@ multiConfirmBtn.addEventListener('click', () => {
     }
 
     const allProdInputs = prodList.querySelectorAll('input');
-
     for (const input of allProdInputs) {
         if (quantity === 0) break;
         if (input.value.trim() === '') {
@@ -969,10 +878,9 @@ multiConfirmBtn.addEventListener('click', () => {
         createProdInput(length);
     }
     
-    multiAddModal.style.display = 'none';
-    softKeypad.style.display = 'none';
-    removeFocus(focusedInput);
-    focusedInput = null;
+    multiLengthInput.value = '';
+    multiQtyInput.value = '';
+    multiLengthInput.focus();
 });
 
 
