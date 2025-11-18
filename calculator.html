@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>넘기기 작업 계산기 (최종 개선)</title>
+<title>넘기기 작업 계산기 (최종)</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
@@ -15,7 +15,7 @@ html, body {
     overflow: hidden;
 }
 h1{
-    position: relative; /* 버전 표시를 위한 기준점 */
+    position: relative;
     text-align:center; margin:0; padding:16px; font-size:30px;
     color:#f0f0f0; background:#1a1a2e;
 }
@@ -37,7 +37,7 @@ h1{
 .top-area {
     width:95%; max-width:1050px; display:flex;
     justify-content:space-between; gap:15px; margin:20px auto 10px auto;
-    align-items: stretch;
+    align-items: stretch; /* 세 개의 박스가 높이를 맞춤 */
 }
 .info-panel, .prod-panel, .record-panel {
     background:#252540; padding:15px; border-radius:14px;
@@ -47,18 +47,6 @@ h1{
 .info-panel{flex:1; min-width:250px;}
 .prod-panel{flex:1.5; min-width:300px;}
 .record-panel{flex:1; min-width:250px;}
-
-@media (max-width:900px){
-    .top-area{flex-wrap: wrap; align-items: flex-start;}
-    .info-panel, .prod-panel, .record-panel {height: auto;}
-    .record-panel{order: 3; width: 100%; max-width: 900px; margin-top: 15px;}
-    .info-panel, .prod-panel{flex: 1 1 45%;}
-}
-@media (max-width:600px){
-    .top-area{flex-direction:column; gap:15px;}
-    .info-panel, .prod-panel, .record-panel{width: 100%;}
-    .record-panel{margin-top: 0;}
-}
 
 /* -------------------- 입력 및 버튼 -------------------- */
 label {
@@ -80,8 +68,11 @@ input{
 .buttons button:active{filter: brightness(0.9);}
 
 .prod-list, .record-list {
-    flex-grow: 1; margin-top:10px; max-height: 40vh;
-    overflow-y:auto; padding-right:10px;
+    flex-grow: 1; /* 남은 공간을 꽉 채움 */
+    margin-top:10px;
+    overflow-y:auto; 
+    padding-right:10px;
+    min-height: 0; /* ★★★★★ 스크롤 문제 해결 ★★★★★ */
 }
 .prod-row{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; gap: 8px;}
 .prod-row div{font-size:15px; font-weight:600; min-width:70px; margin-bottom:0;}
@@ -267,7 +258,7 @@ input{
 <body>
 <h1>
     넘기기 작업 계산기
-    <span id="version-display">v1.6 (반올림 개선)</span>
+    <span id="version-display">v1.9 (최소 1m 적용)</span>
 </h1>
 <div class="content-wrapper">
 <div class="top-area">
@@ -684,13 +675,10 @@ function buildCutPlan(){
             const len_mm = v_m * 1000;
             let required_mm;
             
-            if (v_m < 50) {
-                required_mm = len_mm + 1000;
-            } else if (v_m < 100) {
-                required_mm = len_mm + 2000;
-            } else {
-                required_mm = Math.round(len_mm * (1 + margin_perc / 100));
-            }
+            // ★★★★★ 수정된 계산 로직 ★★★★★
+            const percentage_result_mm = Math.round(len_mm * (1 + margin_perc / 100));
+            const minimum_result_mm = len_mm + 1000;
+            required_mm = Math.max(percentage_result_mm, minimum_result_mm);
             
             lens_mm.push({len_mm, required_mm, v_m});
         }
