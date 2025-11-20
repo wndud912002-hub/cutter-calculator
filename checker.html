@@ -69,7 +69,7 @@ h1{
     flex: 1;
 }
 .multi-add-panel button {
-    height: 47px; /* 입력창 높이에 맞춤 */
+    height: 47px; 
 }
 
 .prod-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
@@ -183,7 +183,7 @@ input[type="number"]::-webkit-inner-spin-button {
 <body>
 <h1>
     재단 길이 확인용 계산기
-    <span id="version-display">v2.7 (UI 개선)</span>
+    <span id="version-display">v3.0 (정수 출력 적용)</span>
 </h1>
 <div class="main-container">
     <div class="input-section">
@@ -242,8 +242,8 @@ const resetBtn = document.getElementById('resetBtn');
 const resultList = document.getElementById('resultList');
 
 const addMultiBtn = document.getElementById('addMultiProd');
-const multiLengthInput = document.getElementById('multiProdLengthInput');
-const multiQtyInput = document.getElementById('multiProdQtyInput');
+const multiProdLengthInput = document.getElementById('multiProdLengthInput');
+const multiProdQtyInput = document.getElementById('multiProdQtyInput');
 
 function initializeProdInputs(){
     prodList.innerHTML = '';
@@ -307,19 +307,20 @@ function buildCutPlan(){
                 margin_perc = globalMargin;
             }
             
-            let required_m;
-            if (v_m < 50) {
-                required_m = v_m + 1;
-            } else if (v_m < 100) {
-                required_m = v_m + 2;
-            } else {
-                required_m = Math.round(v_m * (1 + margin_perc / 100));
-            }
+            // 1. 여유율 적용 결과 (소수점 유지)
+            const required_m_perc = v_m * (1 + margin_perc / 100);
+            
+            // 2. 최소 여유율 1m 보장
+            const required_m_min = v_m + 1;
+            
+            // 3. 둘 중 큰 값을 선택하고 반올림하여 정수로 만듦
+            const required_m_final = Math.max(required_m_perc, required_m_min);
+            const required_m_int = Math.round(required_m_final); // ★ 필요 길이 정수화 완료
 
             products.push({
                 index: products.length + 1,
                 prodLen_m: v_m,
-                required_m: required_m,
+                required_m_int: required_m_int, 
                 margin_perc: margin_perc
             });
         }
@@ -334,7 +335,9 @@ function buildCutPlan(){
     let cumulative = 0;
     for(let i = 0; i < products.length; i++){
         const item = products[i];
-        cumulative += item.required_m;
+        
+        // 누적 계산은 정수로 진행 (필요길이는 정수로 취급)
+        cumulative += item.required_m_int; 
 
         if(cumulative > total_m){
             alert(`⛔ 작업 중단: 총 원단 길이를 초과했습니다!\n제품 ${item.index} (${item.prodLen_m}m) 재단 시 초과됩니다.`);
@@ -342,9 +345,13 @@ function buildCutPlan(){
         }
 
         const remaining_m = total_m - cumulative;
+        
+        // ★ 재단 위치를 정수(Integer)로 표시
+        const cut_pos_int = Math.floor(remaining_m);
+
         cutPlan.push({
             ...item,
-            cutPos: Math.floor(remaining_m)
+            cutPos: cut_pos_int
         });
     }
     renderResult(cutPlan);
@@ -368,11 +375,10 @@ function renderResult(cutPlan){
                     <div class="main-prod-len">${item.prodLen_m.toFixed(2)} m</div>
                 </div>
                 <div class="prod-len-sub-info">
-                    (여유율 ${item.margin_perc}) → <b>필요: ${item.required_m}m</b>
+                    (여유율 ${item.margin_perc}%) → <b>필요: ${item.required_m_int}m</b>
                 </div>
             </div>
-            <div class="cut-pos">${item.cutPos} m</div>
-        `;
+            <div class="cut-pos">${item.cutPos} m</div> `;
         resultList.appendChild(row);
     });
 }
@@ -394,6 +400,8 @@ resetBtn.addEventListener('click', () => {
     if(confirm('모든 입력값을 초기화하시겠습니까?')){
         totalInput.value = '';
         marginInput.value = '2';
+        multiProdLengthInput.value = '';
+        multiProdQtyInput.value = '';
         initializeProdInputs();
         resultList.innerHTML = '<div style="padding:15px; text-align:center; color:#ccc;">계산된 재단 목록이 없습니다.</div>';
     }
@@ -402,17 +410,17 @@ resetBtn.addEventListener('click', () => {
 marginInput.addEventListener('input', applyGlobalMargin);
 
 addMultiBtn.addEventListener('click', () => {
-    const length = parseFloat(multiLengthInput.value);
-    let quantity = parseInt(multiQtyInput.value);
+    const length = parseFloat(multiProdLengthInput.value);
+    let quantity = parseInt(multiProdQtyInput.value);
 
     if (isNaN(length) || length <= 0) {
         alert('올바른 제품 길이를 입력하세요.');
-        multiLengthInput.focus();
+        multiProdLengthInput.focus();
         return;
     }
     if (isNaN(quantity) || quantity <= 0) {
         alert('올바른 수량을 입력하세요.');
-        multiQtyInput.focus();
+        multiProdQtyInput.focus();
         return;
     }
 
@@ -429,10 +437,10 @@ addMultiBtn.addEventListener('click', () => {
         createProdInput(length);
     }
     
+    multiProdLengthInput.value = '';
+    multiProdQtyInput.value = '';
     applyGlobalMargin();
-    multiLengthInput.value = '';
-    multiQtyInput.value = '';
-    multiLengthInput.focus();
+    multiProdLengthInput.focus();
 });
 
 
@@ -445,11 +453,11 @@ document.addEventListener('keydown', (e) => {
     
     e.preventDefault();
 
-    if (target === multiLengthInput) {
-        multiQtyInput.focus();
+    if (target === multiProdLengthInput) {
+        multiProdQtyInput.focus();
         return;
     }
-    if (target === multiQtyInput) {
+    if (target === multiProdQtyInput) {
         addMultiBtn.click();
         return;
     }
