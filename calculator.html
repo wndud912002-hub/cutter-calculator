@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2.0, user-scalable=yes">
-<title>넘기기 작업 계산기 (즉시로딩)</title>
+<title>넘기기 작업 계산기 (세로모드대응)</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
@@ -31,22 +31,79 @@ h1{
     display:flex; flex-direction:column; align-items:center;
 }
 
-/* -------------------- 메인 레이아웃 -------------------- */
+/* -------------------- 메인 레이아웃 (기본 가로 모드) -------------------- */
 .top-area {
     width:98%; max-width:1400px;
     display:flex; justify-content:space-between; gap:10px; margin:10px auto;
     align-items: stretch;
-    height: 60vh; min-height: 400px; 
+    height: 60vh; min-height: 400px; /* 가로 모드 높이 설정 */
+    transition: all 0.3s ease;
 }
+
 .info-panel, .prod-panel, .record-panel {
     background:#252540; padding:12px; border-radius:14px;
     box-shadow:0 4px 15px rgba(0,0,0,0.3); 
     display: flex; flex-direction: column;
     height: 100%; overflow: hidden; 
 }
+
+/* 가로 모드 비율 */
 .info-panel{flex:1; min-width:200px;}
 .prod-panel{flex:1.7; min-width:320px;} 
 .record-panel{flex:1; min-width:200px;}
+
+/* -------------------- ★ 세로 모드 (Portrait) 대응 스타일 ★ -------------------- */
+@media (orientation: portrait) {
+    .top-area {
+        flex-direction: column; /* 세로로 쌓기 */
+        height: calc(100% - 20px); /* 화면 전체 높이 사용 */
+        max-height: none;
+        width: 96%;
+    }
+
+    /* 1. 상단 정보 패널: 높이 최소화 */
+    .info-panel {
+        flex: 0 0 auto; /* 내용물 크기만큼만 */
+        min-height: auto;
+        flex-direction: row; /* 내부 요소 가로 배치 시도 */
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+    }
+    /* 세로모드에서 입력창 가로 배치 최적화 */
+    .info-panel label { margin: 0 !important; font-size: 14px; }
+    .info-panel input { width: 100px !important; margin: 0 !important; font-size: 16px; padding: 6px; }
+    .info-panel .buttons { width: 100%; margin-top: 5px; padding-top: 0; }
+    .info-panel .buttons button { padding: 8px 0; font-size: 14px; }
+
+    /* 2. 중간 제품 패널: 가장 크게 (메인) */
+    .prod-panel {
+        flex: 1; /* 남은 공간 모두 차지 */
+        min-height: 0; /* 스크롤 작동 필수 */
+        width: 100%;
+    }
+
+    /* 3. 하단 기록 패널: 작게 고정 */
+    .record-panel {
+        flex: 0 0 120px; /* 높이 고정 */
+        min-height: 0;
+        width: 100%;
+        margin-bottom: 50px; /* 미리보기 공간 확보 */
+    }
+    .record-list {
+        display: flex; /* 가로 스크롤로 변경하거나 좁은 리스트 */
+        flex-direction: column;
+    }
+    
+    /* 미리보기창 위치 조정 */
+    .cuts {
+        display: none; /* 세로모드 공간 부족 시 미리보기 숨김 (작업표 버튼으로 확인 유도) */
+    }
+    /* 만약 미리보기도 보고 싶다면 아래 주석 해제하고 조정 필요 */
+    /* .cuts { flex: 0 0 100px; order: 4; } */
+}
+
 
 /* -------------------- 입력 및 버튼 -------------------- */
 label {
@@ -232,20 +289,26 @@ input{
 <body>
 <h1>
     넘기기 작업 계산기
-    <span id="version-display">v2.5 (즉시로딩)</span>
+    <span id="version-display">v2.6 (세로대응)</span>
 </h1>
 <div class="content-wrapper">
 <div class="top-area">
 <div class="info-panel">
-<label>총 원단 길이 (m)</label>
-<input type="text" readonly id="totalInput" placeholder="예: 501.54">
-<label>전체 여유율 (%)</label>
-<input type="text" readonly id="marginInput" placeholder="예: 2" value="2">
-<div class="buttons">
-<button id="calcBtn" type="button" class="btn-primary">계산하기</button>
-<button id="resetBtn" type="button">초기화</button>
-<button id="fsBtn" type="button">작업표</button>
-</div>
+    <div style="display: flex; gap: 10px; align-items: center; width: 100%;">
+        <div style="flex: 1;">
+            <label>총 원단 (m)</label>
+            <input type="text" readonly id="totalInput" placeholder="501.54">
+        </div>
+        <div style="flex: 1;">
+            <label>전체 여유 (%)</label>
+            <input type="text" readonly id="marginInput" placeholder="2" value="2">
+        </div>
+    </div>
+    <div class="buttons">
+        <button id="calcBtn" type="button" class="btn-primary">계산하기</button>
+        <button id="resetBtn" type="button">초기화</button>
+        <button id="fsBtn" type="button">작업표</button>
+    </div>
 </div>
 <div class="prod-panel">
     <div class="multi-add-panel">
