@@ -2,8 +2,8 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>넘기기 작업 계산기 (최종)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2.0, user-scalable=yes">
+<title>넘기기 작업 계산기 (즉시로딩)</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
@@ -14,144 +14,135 @@ html, body {
     background:#1a1a2e; color:#fff;
     overflow: hidden;
 }
+*, *::before, *::after { box-sizing: border-box; }
 h1{
     position: relative;
-    text-align:center; margin:0; padding:16px; font-size:30px;
+    text-align:center; margin:0; padding:12px; font-size:26px;
     color:#f0f0f0; background:#1a1a2e;
+    height: 60px;
 }
 #version-display {
-    position: absolute;
-    top: 8px;
-    right: 20px;
-    font-size: 12px;
-    font-weight: 500;
-    color: #888;
+    position: absolute; top: 8px; right: 20px;
+    font-size: 12px; font-weight: 500; color: #888;
 }
 .content-wrapper {
-    position: absolute; top:62px; left:0; right:0; bottom:0;
-    overflow-y:auto; overflow-x:hidden; padding-bottom:20px;
-    z-index:1; display:flex; flex-direction:column; align-items:center;
+    position: absolute; top:60px; left:0; right:0; bottom:0;
+    overflow: hidden; padding-bottom:10px;
+    display:flex; flex-direction:column; align-items:center;
 }
 
-/* -------------------- 메인 레이아웃: 3분할 -------------------- */
+/* -------------------- 메인 레이아웃 -------------------- */
 .top-area {
-    width:95%; max-width:1050px; display:flex;
-    justify-content:space-between; gap:15px; margin:20px auto 10px auto;
-    align-items: stretch; /* 세 개의 박스가 높이를 맞춤 */
+    width:98%; max-width:1400px;
+    display:flex; justify-content:space-between; gap:10px; margin:10px auto;
+    align-items: stretch;
+    height: 60vh; min-height: 400px; 
 }
 .info-panel, .prod-panel, .record-panel {
-    background:#252540; padding:15px; border-radius:14px;
-    box-shadow:0 4px 15px rgba(0,0,0,0.3); box-sizing: border-box;
+    background:#252540; padding:12px; border-radius:14px;
+    box-shadow:0 4px 15px rgba(0,0,0,0.3); 
     display: flex; flex-direction: column;
+    height: 100%; overflow: hidden; 
 }
-.info-panel{flex:1; min-width:250px;}
-.prod-panel{flex:1.5; min-width:300px;}
-.record-panel{flex:1; min-width:250px;}
+.info-panel{flex:1; min-width:200px;}
+.prod-panel{flex:1.7; min-width:320px;} 
+.record-panel{flex:1; min-width:200px;}
 
 /* -------------------- 입력 및 버튼 -------------------- */
 label {
-    display: block; margin-top: 10px; font-size: 16px;
-    font-weight: 600; color: #ccc; word-break: break-word; line-height: 1.3;
+    display: block; margin-top: 8px; font-size: 15px;
+    font-weight: 600; color: #ccc; line-height: 1.2;
 }
 input{
-    width:100%; padding:10px 14px; font-size:19px; border-radius:8px;
-    border:1px solid #3e3e60; margin-top:6px; background:#333355;
-    color:#fff; box-sizing:border-box; cursor:pointer;
+    width:100%; padding:8px 10px; font-size:18px; border-radius:8px;
+    border:1px solid #3e3e60; margin-top:4px; background:#333355;
+    color:#fff; cursor:pointer;
 }
-.buttons{margin-top:auto; padding-top:15px; display:flex; justify-content:space-between; flex-wrap:wrap; gap: 8px;}
+.buttons{margin-top:auto; padding-top:10px; display:flex; justify-content:space-between; flex-wrap:wrap; gap: 6px;}
 .buttons button{
-    flex:1; margin:0; padding:10px 0; font-size:16px; border-radius:10px;
+    flex:1; margin:0; padding:10px 0; font-size:15px; border-radius:8px;
     border:none; background:#3a79d8; color:#fff; font-weight:700;
     transition:background 0.2s; user-select:none;
 }
 .buttons button.btn-primary {background: #2ecc71;}
 .buttons button:active{filter: brightness(0.9);}
 
+/* 리스트 영역 */
 .prod-list, .record-list {
-    flex-grow: 1; /* 남은 공간을 꽉 채움 */
-    margin-top:10px;
-    overflow-y:auto; 
-    padding-right:10px;
-    min-height: 0; /* ★★★★★ 스크롤 문제 해결 ★★★★★ */
+    flex-grow: 1; margin-top:10px; overflow-y:auto; padding-right:5px; height: 0; 
 }
-.prod-row{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; gap: 8px;}
-.prod-row div{font-size:15px; font-weight:600; min-width:70px; margin-bottom:0;}
-.prod-row input{width:100% !important; flex: 1;}
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-thumb { background: #4a4a75; border-radius: 4px; }
+::-webkit-scrollbar-track { background: #1a1a2e; }
+
+/* 제품 입력 행 스타일 (2칸) */
+.prod-row{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; gap: 6px;}
+.prod-row div{font-size:14px; font-weight:600; min-width:50px; margin-bottom:0;}
+.prod-row .input-len { flex: 2 !important; } 
+.prod-row .input-margin { flex: 1 !important; color: #aaa; text-align: center;} 
+.prod-row .input-margin:focus, .prod-row .input-margin.active-input { color: #fff; border-color: #3498db; }
+/* 여유율 placeholder 스타일 */
+.prod-row .input-margin::placeholder { color: #666; font-size: 14px; }
 
 .record-item{
     display:flex; justify-content:space-between; align-items:center;
-    padding:8px 10px; border-bottom: 1px solid #3e3e60;
+    padding:8px 5px; border-bottom: 1px solid #3e3e60;
     cursor:pointer; transition: background 0.1s;
 }
 .record-details{flex:1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
 .record-item:hover{background: #333355;}
 .record-delete{
-    background:none; border:none; color:#e74c3c; font-size:18px;
-    font-weight:bold; cursor:pointer; padding:5px 8px; margin-left:10px;
-    flex-shrink: 0; line-height: 1; font-family: Arial, sans-serif;
+    background:none; border:none; color:#e74c3c; font-size:16px;
+    font-weight:bold; cursor:pointer; padding:5px; margin-left:5px;
+    flex-shrink: 0; line-height: 1;
 }
-.record-date{font-size:13px; color:#b0b0d0;}
-.record-summary{font-size:15px; font-weight:700;}
+.record-date{font-size:12px; color:#b0b0d0;}
+.record-summary{font-size:14px; font-weight:700;}
 
 /* 여러 개 추가 UI */
-.multi-add-panel { 
-    padding-top: 15px;
-    padding-bottom: 15px; 
-    border-bottom: 1px solid #3e3e60; 
-}
-.multi-add-panel .input-group {
-    display: flex;
-    gap: 10px;
-    align-items: flex-end;
-}
+.multi-add-panel { padding-top: 10px; padding-bottom: 10px; border-bottom: 1px solid #3e3e60; }
+.multi-add-panel .input-group { display: flex; gap: 8px; align-items: flex-end; }
 .multi-add-panel .input-group > div { flex: 1; }
-.multi-add-panel button { height: 47px; flex: 0.8; }
-
+.multi-add-panel button { height: 42px; flex: 0.8; }
 
 /* -------------------- 미리보기 -------------------- */
-.cuts{width:90%; max-width:700px; margin:0 auto 20px auto; text-align:center;}
-.cuts h3{margin-bottom:10px; color:#3498db; font-size:20px;}
-.preview-cuts-list{max-height: 35vh; overflow-y: auto; padding-right: 10px;}
+.cuts{
+    width:98%; max-width:800px; margin:5px auto; text-align:center;
+    flex: 1; display: flex; flex-direction: column; overflow: hidden;
+}
+.cuts h3{margin-bottom:8px; color:#3498db; font-size:18px; margin-top: 0;}
+.preview-cuts-list{
+    flex: 1; overflow-y: auto; padding-right: 10px; padding-bottom: 10px;
+    max-height: calc(100vh - 65vh - 80px); 
+}
 .cut-row{
     display:flex; justify-content:space-between; align-items:center;
-    padding:12px 15px; border-radius:12px; background:#252540;
+    padding:10px 15px; border-radius:10px; background:#252540;
     margin-bottom:6px; box-shadow:0 2px 8px rgba(0,0,0,0.2);
 }
 .cut-left{display:flex; flex-direction:column; text-align:left; gap: 4px;}
-.cut-row .prod-name{font-size:18px; font-weight:700; color:#3498db;}
+.cut-row .prod-name{font-size:16px; font-weight:700; color:#3498db;}
 .cut-row .prod-len{font-size:12px; color:#b0b0d0;}
 .cut-row .prod-len b { color: #2ecc71; font-weight: 700; }
-.cut-row .cut-pos{font-size:30px; font-weight:900; color:#e74c3c;}
+.cut-row .cut-pos{font-size:26px; font-weight:900; color:#e74c3c;}
 
 /* -------------------- 키패드 -------------------- */
 #softKeypad{
-    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-    width:90%; max-width:400px; background:#252540; padding:10px;
-    display: grid; grid-template-columns: repeat(4, 1fr); gap:8px;
+    position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
+    width:95%; max-width:380px; background:#252540; padding:8px;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap:6px;
     border-radius:14px; box-shadow:0 8px 30px rgba(0,0,0,0.8); z-index:10002; margin: 0;
 }
-@media (orientation: portrait) {
-    #softKeypad {
-        bottom: 30vh;
-    }
-}
 .keypad-button{
-    padding:18px; font-size:26px; font-weight:bold; background:#4a4a75;
+    padding:15px; font-size:22px; font-weight:bold; background:#4a4a75;
     color:#fff; border:none; border-radius:8px; user-select:none;
     cursor:pointer; transition:background 0.1s; touch-action:manipulation;
 }
 .keypad-button:active{background:#3a3a60;}
-.keypad-button.disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-    background: #4a4a75 !important;
-}
-.keypad-button.disabled:active {
-    background: #4a4a75 !important;
-}
-.keypad-action{background:#e74c3c !important; font-size: 20px !important;}
+.keypad-button.disabled { opacity: 0.3; cursor: not-allowed; background: #4a4a75 !important; }
+.keypad-action{background:#e74c3c !important; font-size: 18px !important;}
 .keypad-action:active{background:#c0392b !important;}
-#enterKey{background:#3498db !important; font-size: 20px !important; grid-row: 3 / span 2; grid-column: 4;}
+#enterKey{background:#3498db !important; font-size: 18px !important; grid-row: 3 / span 2; grid-column: 4;}
 #enterKey:active{background:#2980b9 !important;}
 .keypad-button[data-key="7"] { grid-row: 1; grid-column: 1; }
 .keypad-button[data-key="8"] { grid-row: 1; grid-column: 2; }
@@ -166,80 +157,63 @@ input{
 .keypad-button[data-key="3"] { grid-row: 3; grid-column: 3; }
 .keypad-button[data-key="0"] { grid-row: 4; grid-column: 1 / span 3; }
 
-/* -------------------- 전체화면 (시인성 개선) -------------------- */
+/* -------------------- 전체화면 -------------------- */
 .fullscreen{
     display:none; position:fixed; inset:0; background:#1a1a2e; z-index:9999;
     flex-direction:column; align-items:center; justify-content:flex-start;
     padding-top:20px; overflow-y:hidden;
 }
-.fs-title{font-size:30px; margin-bottom:15px; color:#3498db; font-weight:700;}
+.fs-title{font-size:28px; margin-bottom:10px; color:#3498db; font-weight:700;}
 .fs-info-container {
-    display: flex; justify-content: space-between; width: 90%; max-width: 800px;
-    margin-bottom: 20px; background: #252540; padding: 15px; border-radius: 14px;
+    display: flex; justify-content: space-between; width: 95%; max-width: 900px;
+    margin-bottom: 15px; background: #252540; padding: 12px; border-radius: 14px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
 .fs-info-left, .fs-info-right {flex: 1; min-width: 0; text-align: center;}
-.fs-info-title {font-size: 18px; color: #f0f0f0; font-weight: 700; margin-bottom: 8px;}
-.fs-info-text {font-size: 16px; color: #ccc; line-height: 1.5; white-space: pre-wrap;}
-.fs-summary {font-size: 18px; color: #e74c3c; margin-bottom: 8px; font-weight: 900;}
+.fs-info-title {font-size: 16px; color: #f0f0f0; font-weight: 700; margin-bottom: 6px;}
+.fs-info-text {font-size: 15px; color: #ccc; line-height: 1.4; white-space: pre-wrap;}
+.fs-summary {font-size: 16px; color: #e74c3c; margin-bottom: 6px; font-weight: 900;}
 .fs-sub {
-    font-size: 14px; color: #ccc; white-space: pre-wrap; text-align: center;
-    max-height: 100px; overflow-y: auto; padding: 0 10px; box-sizing: border-box;
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px 15px;
+    font-size: 13px; color: #ccc; white-space: pre-wrap; text-align: center;
+    max-height: 80px; overflow-y: auto; padding: 0 10px; box-sizing: border-box;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px 10px;
 }
 .cuts-title-row {
-    display: flex;
-    justify-content: space-between;
-    width: 95%; max-width: 800px;
-    padding: 10px 20px;
-    box-sizing: border-box;
-    margin-top: 15px;
-    border-bottom: 2px solid #3498db;
-    font-weight: 900;
-    font-size: 20px;
-    color: #3498db;
+    display: flex; justify-content: space-between; width: 95%; max-width: 900px;
+    padding: 8px 20px; box-sizing: border-box; margin-top: 10px;
+    border-bottom: 2px solid #3498db; font-weight: 900; font-size: 18px; color: #3498db;
 }
-.cuts-title-row .cuts-title-left {
-    text-align: left;
-    flex: 1;
-}
-.cuts-title-row .cuts-title-right {
-    flex: 1;
-    text-align: center;
-}
+.cuts-title-row .cuts-title-left { text-align: left; flex: 1; }
+.cuts-title-row .cuts-title-right { flex: 1; text-align: center; }
 .cuts-fs{
-    max-height: calc(100vh - 270px); overflow-y:auto; width:95%; max-width:800px;
+    max-height: calc(100vh - 250px); overflow-y:auto; width:95%; max-width:900px;
     margin-bottom:10px;
 }
 .controls-bottom{position:fixed; bottom:10px; display:flex; gap:12px;}
-.controls-bottom button{padding:12px 20px; font-size:18px; border-radius:12px; border:none; background:#e74c3c; color:#fff; font-weight:700;}
+.controls-bottom button{padding:10px 20px; font-size:16px; border-radius:10px; border:none; background:#e74c3c; color:#fff; font-weight:700;}
 .controls-bottom button:active{background:#c0392b;}
 
 #fsCuts .cut-row{
-    margin-bottom: 6px; padding: 15px 20px; border-radius: 12px; background: #2f2f50;
+    margin-bottom: 5px; padding: 10px 20px; border-radius: 10px; background: #2f2f50;
     box-shadow: 0 4px 15px rgba(0,0,0,0.3); align-items: center; display: flex;
     transition: background-color 0.2s;
 }
 #fsCuts .cut-left {flex: 1; display: flex; flex-direction: column; align-items: flex-start;}
-#fsCuts .prod-name-row {display: flex; align-items: baseline; gap: 10px;}
-#fsCuts .prod-name{font-size:30px; font-weight:900; color:#3498db;}
-#fsCuts .main-len{font-size:32px; font-weight:900; color: #f0f0f0;}
-#fsCuts .required-len{font-size:16px; color:#b0b0d0; font-weight:500; margin-top: 4px;}
-#fsCuts .required-len b { color: #2ecc71; font-weight: 700; font-size: 18px; }
+#fsCuts .prod-name-row {display: flex; align-items: baseline; gap: 8px;}
+#fsCuts .prod-name{font-size:26px; font-weight:900; color:#3498db;}
+#fsCuts .main-len{font-size:28px; font-weight:900; color: #f0f0f0;}
+#fsCuts .required-len{font-size:14px; color:#b0b0d0; font-weight:500; margin-top: 2px;}
+#fsCuts .required-len b { color: #2ecc71; font-weight: 700; font-size: 16px; }
 #fsCuts .cut-pos{
-    flex: 1;
-    text-align: center;
-    font-size:68px;
-    font-weight:900;
-    color:#e74c3c;
+    flex: 1; text-align: center; font-size:60px; font-weight:900; color:#e74c3c;
 }
 
 /* 모달 및 개별 삭제 버튼 */
 .custom-modal-overlay{display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:10001; justify-content:center; align-items:center; padding:20px;}
-.custom-modal-content{background:#252540; padding:25px; border-radius:15px; width:90%; max-width:400px; box-shadow:0 0 20px rgba(0,0,0,0.5); text-align:center;}
-.modal-title{font-size:22px; font-weight:700; color:#3498db; margin-bottom:15px;}
-.modal-message{font-size:16px; color:#ccc; margin-bottom:20px; white-space:pre-wrap;}
-.modal-buttons button{padding:10px 20px; font-size:16px; border-radius:8px; border:none; font-weight:700; transition:background 0.2s; cursor:pointer;}
+.custom-modal-content{background:#252540; padding:20px; border-radius:15px; width:90%; max-width:380px; box-shadow:0 0 20px rgba(0,0,0,0.5); text-align:center;}
+.modal-title{font-size:20px; font-weight:700; color:#3498db; margin-bottom:12px;}
+.modal-message{font-size:15px; color:#ccc; margin-bottom:18px; white-space:pre-wrap;}
+.modal-buttons button{padding:8px 18px; font-size:15px; border-radius:8px; border:none; font-weight:700; transition:background 0.2s; cursor:pointer;}
 #passwordModalInput{ width:100%; padding:10px; font-size:20px; border-radius:8px; border:1px solid #3e3e60; margin-top:10px; background:#333355; color:#fff; box-sizing:border-box; text-align:center; }
 #modalConfirmBtn{background:#3a79d8; color:#fff; margin-left:10px;}
 #modalCancelBtn{background:#555; color:#fff;}
@@ -248,7 +222,7 @@ input{
 #pwdConfirmBtn:active {background: #c0392b !important;}
 .btn-delete-row {
     background: #e74c3c; color: white; border: none; border-radius: 50%;
-    width: 28px; height: 28px; font-size: 14px; font-weight: bold;
+    width: 24px; height: 24px; font-size: 12px; font-weight: bold;
     cursor: pointer; margin-left: 5px; flex-shrink: 0;
 }
 .btn-delete-row:hover { background: #c0392b; }
@@ -258,14 +232,14 @@ input{
 <body>
 <h1>
     넘기기 작업 계산기
-    <span id="version-display">v1.9 (최소 1m 적용)</span>
+    <span id="version-display">v2.5 (즉시로딩)</span>
 </h1>
 <div class="content-wrapper">
 <div class="top-area">
 <div class="info-panel">
 <label>총 원단 길이 (m)</label>
 <input type="text" readonly id="totalInput" placeholder="예: 501.54">
-<label>여유율 (%)</label>
+<label>전체 여유율 (%)</label>
 <input type="text" readonly id="marginInput" placeholder="예: 2" value="2">
 <div class="buttons">
 <button id="calcBtn" type="button" class="btn-primary">계산하기</button>
@@ -287,9 +261,12 @@ input{
         </div>
     </div>
 
-    <label style="margin-top: 15px;">제품 목록</label>
+    <div style="display:flex; justify-content:space-between; margin-top:10px;">
+        <label>제품 목록</label>
+        <label style="font-size:12px; color:#888;">[길이 m] [개별%]</label>
+    </div>
     <div class="prod-list" id="prodList"></div>
-    <div class="buttons" style="padding-top: 10px;">
+    <div class="buttons" style="padding-top: 5px;">
         <button id="addProd" type="button">+ 1개 추가</button>
     </div>
 </div>
@@ -370,7 +347,7 @@ input{
 <script>
 document.addEventListener('DOMContentLoaded', function() {
 const MAX_PROD = 30;
-const STORAGE_KEY = 'cutCalculatorRecords';
+const STORAGE_KEY = 'cutCalculatorRecords_v2'; 
 const DELETE_PASSWORD = '1205';
 
 const prodList = document.getElementById('prodList');
@@ -426,19 +403,28 @@ function saveRecords(records){
 
 function saveResult(){
     const currentRecords = getRecords();
-    const prodInputs = [];
-    prodList.querySelectorAll('input').forEach(input => {
-        if(parseFloat(input.value)>0) prodInputs.push(input.value);
+    const prodData = [];
+    
+    prodList.querySelectorAll('.prod-row').forEach(row => {
+        const lenInput = row.querySelector('.input-len');
+        const marginInput = row.querySelector('.input-margin');
+        const lenVal = parseFloat(lenInput.value);
+        if(lenVal > 0) {
+            prodData.push({
+                len: lenInput.value,
+                margin: marginInput.value
+            });
+        }
     });
 
-    if (prodInputs.length === 0) return;
+    if (prodData.length === 0) return;
 
     const newRecord = {
         id: Date.now(),
         timestamp: new Date().toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
         totalInput: totalInput.value,
         marginInput: marginInput.value,
-        prodInputs: prodInputs,
+        prodData: prodData, 
         cutPlan: cutPlan
     };
 
@@ -451,13 +437,20 @@ function restoreRecord(record){
     prodList.innerHTML = '';
     totalInput.value = record.totalInput;
     marginInput.value = record.marginInput;
-    record.prodInputs.forEach(val => createProdInput(Math.floor(parseFloat(val))));
+    
+    if (record.prodData) {
+        record.prodData.forEach(item => createProdInput(item.len, item.margin));
+    } else if (record.prodInputs) {
+        record.prodInputs.forEach(val => createProdInput(val, ''));
+    }
+
     let currentProdCount = prodList.querySelectorAll('.prod-row').length;
     while(currentProdCount < 6){
         createProdInput('');
         currentProdCount++;
     }
     cutPlan = record.cutPlan;
+    updateMarginPlaceholders(); 
     renderPreview();
     showModal('기록 불러오기','선택한 기록으로 계산기 입력값이 복원되었습니다.',false);
 }
@@ -494,7 +487,7 @@ function renderRecords(records){
             restoreRecord(record);
         });
 
-        const numProds = record.prodInputs.length;
+        const numProds = record.prodData ? record.prodData.length : record.prodInputs.length;
         const totalLen = Math.floor(parseFloat(record.totalInput));
 
         item.innerHTML = `
@@ -514,46 +507,47 @@ function renderRecords(records){
     });
 }
 
-window.loadResults = function() {
-    renderRecords(getRecords());
-}
-
-
-// ==========================================
-// 키패드 및 입력 로직
-// ==========================================
-function getAllInputs() {
-    return [totalInput, marginInput, multiLengthInput, multiQtyInput, ...prodList.querySelectorAll('input')];
-}
-
 function removeFocus(input) {
-    if(input) input.style.border='1px solid #3e3e60';
+    if(input) {
+        input.style.border='1px solid #3e3e60';
+        input.classList.remove('active-input');
+    }
 }
 
 function inputClickHandler(event){
     removeFocus(focusedInput);
     focusedInput = event.target;
     focusedInput.style.border='1px solid #3498db';
+    focusedInput.classList.add('active-input');
     softKeypad.style.display='grid';
-    
-    const isIntOnly = focusedInput.closest('.prod-panel') !== null || focusedInput === passwordModalInput || focusedInput === multiLengthInput || focusedInput === multiQtyInput;
-    
-    if (isIntOnly) {
-        dotKey.classList.add('disabled');
-    } else {
-        dotKey.classList.remove('disabled');
-    }
+    dotKey.classList.remove('disabled');
 }
 
-function createProdInput(value=''){
+function updateMarginPlaceholders() {
+    const globalVal = marginInput.value || '0';
+    const prodRows = prodList.querySelectorAll('.prod-row');
+    prodRows.forEach(row => {
+        const marginInput = row.querySelector('.input-margin');
+        marginInput.placeholder = `기본(${globalVal})`;
+    });
+}
+
+function createProdInput(lenValue='', marginValue=''){
     const row=document.createElement('div');
     row.className='prod-row';
     row.innerHTML=`
         <div></div>
-        <input type="text" readonly placeholder="길이 (m)" value="${value}">
+        <input type="text" readonly class="input-len" placeholder="길이" value="${lenValue}">
+        <input type="text" readonly class="input-margin" placeholder="기본" value="${marginValue}">
         <button type="button" class="btn-delete-row">X</button>
     `;
-    row.querySelector('input').addEventListener('click', inputClickHandler);
+    
+    const inputLen = row.querySelector('.input-len');
+    const inputMargin = row.querySelector('.input-margin');
+    
+    inputLen.addEventListener('click', inputClickHandler);
+    inputMargin.addEventListener('click', inputClickHandler);
+    
     row.querySelector('.btn-delete-row').addEventListener('click', () => {
         if (prodList.querySelectorAll('.prod-row').length > 1) {
             row.remove();
@@ -564,6 +558,11 @@ function createProdInput(value=''){
     });
     prodList.appendChild(row);
     updateProdLabels();
+    updateMarginPlaceholders(); 
+    
+    setTimeout(() => {
+        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
 }
 
 function initializeProdInputs(){
@@ -572,7 +571,7 @@ function initializeProdInputs(){
     softKeypad.style.display='none';
     prodList.innerHTML='';
     cutPlan=[];
-    for(let i=0;i<6;i++) createProdInput('');
+    for(let i=0;i<6;i++) createProdInput('','');
 }
 
 function updateProdLabels() {
@@ -600,11 +599,47 @@ softKeypad.addEventListener('click',(event)=>{
         if (focusedInput === multiLengthInput) { multiQtyInput.click(); return; }
         if (focusedInput === multiQtyInput) { addMultiBtn.click(); return; }
 
-        const allInputs = getAllInputs();
+        if (focusedInput.classList.contains('input-len')) {
+            const currentRow = focusedInput.closest('.prod-row');
+            const nextRow = currentRow.nextElementSibling;
+            
+            if (nextRow) {
+                const nextLenInput = nextRow.querySelector('.input-len');
+                inputClickHandler({ target: nextLenInput });
+            } else {
+                createProdInput(); 
+                const newRows = prodList.querySelectorAll('.prod-row');
+                const newLenInput = newRows[newRows.length - 1].querySelector('.input-len');
+                inputClickHandler({ target: newLenInput });
+            }
+            return;
+        }
+
+        if (focusedInput.classList.contains('input-margin')) {
+            const currentRow = focusedInput.closest('.prod-row');
+            const nextRow = currentRow.nextElementSibling;
+             if (nextRow) {
+                const nextLenInput = nextRow.querySelector('.input-len');
+                inputClickHandler({ target: nextLenInput });
+            } else {
+                createProdInput();
+                const newRows = prodList.querySelectorAll('.prod-row');
+                const newLenInput = newRows[newRows.length - 1].querySelector('.input-len');
+                inputClickHandler({ target: newLenInput });
+            }
+            return;
+        }
+        
+        const allInputs = [totalInput, marginInput]; 
         const idx = allInputs.indexOf(focusedInput);
-        removeFocus(focusedInput); focusedInput=null;
-        if(idx!==-1 && idx<allInputs.length-1) inputClickHandler({target:allInputs[idx+1]});
-        else softKeypad.style.display='none';
+        if(idx !== -1 && idx < allInputs.length - 1) {
+             inputClickHandler({target: allInputs[idx+1]});
+        } else if (focusedInput === marginInput) {
+             const firstLen = prodList.querySelector('.input-len');
+             if(firstLen) inputClickHandler({target: firstLen});
+        } else {
+            removeFocus(focusedInput); focusedInput=null; softKeypad.style.display='none';
+        }
         return;
     }
 
@@ -616,10 +651,14 @@ softKeypad.addEventListener('click',(event)=>{
         if(!val.includes('.')) focusedInput.value=val+'.';
     }
     else if(key>='0'&&key<='9'){
-        if (focusedInput === totalInput || focusedInput === marginInput) {
-            if(val.includes('.')){ const dec=val.split('.')[1]; if(dec && dec.length>=2) return; }
+        if (focusedInput === totalInput || focusedInput === marginInput || focusedInput.classList.contains('input-margin')) {
+             if(val.includes('.')){ const dec=val.split('.')[1]; if(dec && dec.length>=2) return; }
         }
         focusedInput.value=val+key;
+    }
+    
+    if (focusedInput === marginInput) {
+        updateMarginPlaceholders();
     }
 });
 
@@ -638,9 +677,6 @@ document.addEventListener('click',(event)=>{
 });
 
 
-// ==========================================
-// 버튼 및 계산 로직
-// ==========================================
 addBtn.addEventListener('click',()=>createProdInput());
 
 resetBtn.addEventListener('click',(e)=>{
@@ -652,6 +688,7 @@ resetBtn.addEventListener('click',(e)=>{
             multiLengthInput.value = '';
             multiQtyInput.value = '';
             initializeProdInputs();
+            updateMarginPlaceholders();
             previewCutsList.innerHTML='<div style="padding:15px; text-align:center; color:#ccc;">계산된 재단 목록이 없습니다.</div>';
             fsContainer.style.display='none';
         }
@@ -667,20 +704,32 @@ function buildCutPlan(){
         return false;
     }
     const total_mm = Math.round(total_m * 1000);
-    const margin_perc = parseFloat(marginInput.value) || 0;
+    const global_margin_perc = parseFloat(marginInput.value) || 0;
+    
     const lens_mm=[];
-    prodList.querySelectorAll('input').forEach((i)=>{
-        const v_m=parseInt(i.value);
-        if(!isNaN(v_m)&&v_m>0){
-            const len_mm = v_m * 1000;
-            let required_mm;
+    
+    prodList.querySelectorAll('.prod-row').forEach((row)=>{
+        const lenInput = row.querySelector('.input-len');
+        const marginInputLocal = row.querySelector('.input-margin');
+        
+        const v_m = parseFloat(lenInput.value); 
+        
+        if(!isNaN(v_m) && v_m > 0){
+            const len_mm = Math.round(v_m * 1000);
             
-            // ★★★★★ 수정된 계산 로직 ★★★★★
-            const percentage_result_mm = Math.round(len_mm * (1 + margin_perc / 100));
+            let local_margin_val = marginInputLocal.value;
+            let applied_margin_perc = global_margin_perc;
+            
+            if(local_margin_val !== '') {
+                applied_margin_perc = parseFloat(local_margin_val);
+                if(isNaN(applied_margin_perc)) applied_margin_perc = 0;
+            }
+
+            const percentage_result_mm = Math.round(len_mm * (1 + applied_margin_perc / 100));
             const minimum_result_mm = len_mm + 1000;
-            required_mm = Math.max(percentage_result_mm, minimum_result_mm);
+            const required_mm = Math.max(percentage_result_mm, minimum_result_mm);
             
-            lens_mm.push({len_mm, required_mm, v_m});
+            lens_mm.push({len_mm, required_mm, v_m, applied_margin: applied_margin_perc});
         }
     });
 
@@ -704,7 +753,8 @@ function buildCutPlan(){
             index:i+1,
             prodLen_m: (item.len_mm/1000),
             required_m:(required_mm/1000),
-            cutPos:Math.floor(remaining_mm/1000)
+            cutPos:Math.floor(remaining_mm/1000),
+            margin_used: item.applied_margin
         });
     }
     renderPreview();
@@ -716,7 +766,12 @@ function renderPreview(){
     if(cutPlan.length===0){previewCutsList.innerHTML+='<div style="padding:15px;text-align:center;color:#ccc;">계산된 재단 목록이 없습니다.</div>'; return;}
     cutPlan.forEach(item=>{
         const row=document.createElement('div'); row.className='cut-row';
-        row.innerHTML=`<div class="cut-left"><div class="prod-name">제품 ${item.index} (${item.prodLen_m}m)</div><div class="prod-len">필요 길이: <b>${Math.round(item.required_m)}m</b></div></div><div class="cut-pos">${item.cutPos} m</div>`;
+        row.innerHTML=`
+            <div class="cut-left">
+                <div class="prod-name">제품 ${item.index} (${item.prodLen_m}m) <span style="font-size:12px; color:#aaa;">[여유 ${item.margin_used}%]</span></div>
+                <div class="prod-len">필요 길이: <b>${Math.round(item.required_m)}m</b></div>
+            </div>
+            <div class="cut-pos">${item.cutPos} m</div>`;
         previewCutsList.appendChild(row);
     });
 }
@@ -726,23 +781,25 @@ function showFullscreen(){
         showModal('알림', '먼저 계산을 수행하여 재단 목록을 만드세요.', false);
         return;
     }
-    const lens = prodList.querySelectorAll('input');
+    const rows = prodList.querySelectorAll('.prod-row');
     let subText = '';
     let validProductsCount = 0;
     
-    lens.forEach((i, idx) => {
-        const value = i.value.trim();
-        if (value && parseInt(value) > 0) {
+    rows.forEach((row, idx) => {
+        const lenInput = row.querySelector('.input-len');
+        const value = lenInput.value.trim();
+        if (value && parseFloat(value) > 0) {
             const label = `제품 ${idx + 1}`;
             const displayValue = Math.floor(parseFloat(value));
-            subText += `<div>${label}: ${displayValue} m</div>`; 
+            subText += `<div>${label}: ${displayValue}m</div>`; 
             validProductsCount++;
         }
     });
     fsSummary.innerText = `제품 수량: ${validProductsCount}개`;
     const total_m = totalInput.value ? parseFloat(totalInput.value).toFixed(2) : 'N/A';
+    
     const margin_perc = marginInput.value ? parseFloat(marginInput.value).toFixed(0) : 'N/A';
-    fsInfo.innerText = `총 원단 길이: ${total_m} m\n여유율: ${margin_perc}%`;
+    fsInfo.innerText = `총 원단 길이: ${total_m} m\n기본 여유율: ${margin_perc}% (개별적용)`;
     fsSub.innerHTML = subText; 
 
     const fsCuts = document.getElementById('fsCuts');
@@ -756,7 +813,7 @@ function showFullscreen(){
                                 <div class="prod-name">${label}</div>
                                 <div class="main-len">${item.prodLen_m} m</div>
                             </div>
-                            <div class="required-len">(필요 길이: <b>${Math.round(item.required_m)}m</b>)</div>
+                            <div class="required-len">(필요: <b>${Math.round(item.required_m)}m</b> / 여유 ${item.margin_used}%)</div>
                         </div>
                         <div class="cut-pos">${item.cutPos} m</div>`;
         fsCuts.appendChild(row);
@@ -853,17 +910,18 @@ addMultiBtn.addEventListener('click', () => {
         return;
     }
 
-    const allProdInputs = prodList.querySelectorAll('input');
-    for (const input of allProdInputs) {
+    const allRows = prodList.querySelectorAll('.prod-row');
+    for (const row of allRows) {
         if (quantity === 0) break;
-        if (input.value.trim() === '') {
-            input.value = length;
+        const lenInput = row.querySelector('.input-len');
+        if (lenInput.value.trim() === '') {
+            lenInput.value = length;
             quantity--;
         }
     }
 
     for (let i = 0; i < quantity; i++) {
-        createProdInput(length);
+        createProdInput(length, ''); 
     }
     
     multiLengthInput.value = '';
@@ -871,6 +929,9 @@ addMultiBtn.addEventListener('click', () => {
     multiLengthInput.focus();
 });
 
+// 앱 시작 시 기록 불러오기 및 초기 세팅 (★ 핵심 수정)
+renderRecords(getRecords());
+updateMarginPlaceholders();
 
 });
 </script>
