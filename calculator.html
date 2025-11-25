@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=0.8, maximum-scale=2.0, user-scalable=yes">
-<title>넘기기 작업 계산기 (V2.5.2 스케일0.8)</title>
+<title>넘기기 작업 계산기 (V3.2 정수계산)</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
@@ -34,7 +34,7 @@ h1{
 /* -------------------- 메인 레이아웃 (3분할) -------------------- */
 .top-area {
     width:96%; max-width:1400px;
-    display:flex; justify-content:space-between; gap:10px; margin:10px auto;
+    display:flex; justify-content:space-between; gap:8px; margin:10px auto;
     align-items: stretch;
     height: 60vh; min-height: 400px; 
 }
@@ -233,7 +233,7 @@ input{
 <body>
 <h1>
     넘기기 작업 계산기
-    <span id="version-display">v2.5.2 (스케일0.8)</span>
+    <span id="version-display">v3.2 (정수계산)</span>
 </h1>
 <div class="content-wrapper">
 <div class="top-area">
@@ -726,9 +726,14 @@ function buildCutPlan(){
                 if(isNaN(applied_margin_perc)) applied_margin_perc = 0;
             }
 
-            const percentage_result_mm = Math.round(len_mm * (1 + applied_margin_perc / 100));
-            const minimum_result_mm = len_mm + 1000;
-            const required_mm = Math.max(percentage_result_mm, minimum_result_mm);
+            // ★★★ 수정된 계산 로직 (정수 올림) ★★★
+            let percentage_result_mm = len_mm * (1 + applied_margin_perc / 100);
+            let minimum_result_mm = len_mm + 1000;
+            
+            // 둘 중 큰 값을 선택하되, 무조건 m 단위로 올림 처리 (예: 52.53m -> 53m)
+            // 이렇게 해야 914 - 53 = 861 처럼 딱 떨어지는 계산이 됨
+            let raw_required_mm = Math.max(percentage_result_mm, minimum_result_mm);
+            let required_mm = Math.ceil(raw_required_mm / 1000) * 1000; 
             
             lens_mm.push({len_mm, required_mm, v_m, applied_margin: applied_margin_perc});
         }
