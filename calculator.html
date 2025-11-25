@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=0.8, maximum-scale=2.0, user-scalable=yes">
-<title>넘기기 작업 계산기 (V3.2 정수계산)</title>
+<title>넘기기 작업 계산기 (V3.3 키패드위치)</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
@@ -127,12 +127,24 @@ input{
 .cut-row .prod-len b { color: #2ecc71; font-weight: 700; }
 .cut-row .cut-pos{font-size:26px; font-weight:900; color:#e74c3c;}
 
-/* -------------------- 키패드 (기존 디자인) -------------------- */
+/* -------------------- ★★★ 키패드 (위치 수정됨) ★★★ -------------------- */
 #softKeypad{
-    position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
-    width:95%; max-width:380px; background:#252540; padding:8px;
+    position: fixed; 
+    /* 수정: 바닥(bottom:10px)에서 -> 화면 하단 30% 지점으로 올림 */
+    bottom: 30vh; 
+    left: 50%; 
+    transform: translateX(-50%);
+    
+    width:95%; max-width:380px; 
+    background:#2f2f50; /* 배경색 살짝 밝게 해서 구분 */
+    padding:10px;
     display: grid; grid-template-columns: repeat(4, 1fr); gap:6px;
-    border-radius:14px; box-shadow:0 8px 30px rgba(0,0,0,0.8); z-index:10002; margin: 0;
+    border-radius:14px; 
+    /* 그림자를 진하게 줘서 떠있는 느낌 강조 */
+    box-shadow:0 10px 30px rgba(0,0,0,0.9); 
+    z-index:10002; 
+    margin: 0;
+    border: 1px solid #4a4a75; /* 테두리 추가 */
 }
 .keypad-button{
     padding:15px; font-size:22px; font-weight:bold; background:#4a4a75;
@@ -233,7 +245,7 @@ input{
 <body>
 <h1>
     넘기기 작업 계산기
-    <span id="version-display">v3.2 (정수계산)</span>
+    <span id="version-display">v3.3 (키패드위치)</span>
 </h1>
 <div class="content-wrapper">
 <div class="top-area">
@@ -730,8 +742,7 @@ function buildCutPlan(){
             let percentage_result_mm = len_mm * (1 + applied_margin_perc / 100);
             let minimum_result_mm = len_mm + 1000;
             
-            // 둘 중 큰 값을 선택하되, 무조건 m 단위로 올림 처리 (예: 52.53m -> 53m)
-            // 이렇게 해야 914 - 53 = 861 처럼 딱 떨어지는 계산이 됨
+            // 둘 중 큰 값을 선택하되, 무조건 m 단위로 올림 처리
             let raw_required_mm = Math.max(percentage_result_mm, minimum_result_mm);
             let required_mm = Math.ceil(raw_required_mm / 1000) * 1000; 
             
