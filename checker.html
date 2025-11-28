@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>재단 길이 확인용 계산기 (최종)</title>
+<title>재단 길이 확인용 계산기 (자동추가)</title>
 <style>
 /* -------------------- 전역 스타일 -------------------- */
 html, body {
@@ -183,7 +183,7 @@ input[type="number"]::-webkit-inner-spin-button {
 <body>
 <h1>
     재단 길이 확인용 계산기
-    <span id="version-display">v3.0 (정수 출력 적용)</span>
+    <span id="version-display">v3.1 (자동추가)</span>
 </h1>
 <div class="main-container">
     <div class="input-section">
@@ -307,15 +307,10 @@ function buildCutPlan(){
                 margin_perc = globalMargin;
             }
             
-            // 1. 여유율 적용 결과 (소수점 유지)
             const required_m_perc = v_m * (1 + margin_perc / 100);
-            
-            // 2. 최소 여유율 1m 보장
             const required_m_min = v_m + 1;
-            
-            // 3. 둘 중 큰 값을 선택하고 반올림하여 정수로 만듦
             const required_m_final = Math.max(required_m_perc, required_m_min);
-            const required_m_int = Math.round(required_m_final); // ★ 필요 길이 정수화 완료
+            const required_m_int = Math.round(required_m_final); 
 
             products.push({
                 index: products.length + 1,
@@ -335,8 +330,6 @@ function buildCutPlan(){
     let cumulative = 0;
     for(let i = 0; i < products.length; i++){
         const item = products[i];
-        
-        // 누적 계산은 정수로 진행 (필요길이는 정수로 취급)
         cumulative += item.required_m_int; 
 
         if(cumulative > total_m){
@@ -345,8 +338,6 @@ function buildCutPlan(){
         }
 
         const remaining_m = total_m - cumulative;
-        
-        // ★ 재단 위치를 정수(Integer)로 표시
         const cut_pos_int = Math.floor(remaining_m);
 
         cutPlan.push({
@@ -444,6 +435,7 @@ addMultiBtn.addEventListener('click', () => {
 });
 
 
+// ★★★ 키보드 이벤트 수정됨 (자동 추가 기능) ★★★
 document.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter') return;
     
@@ -462,6 +454,21 @@ document.addEventListener('keydown', (e) => {
         return;
     }
     
+    // 제품 길이 입력칸인 경우 체크
+    if (target.classList.contains('prod-len-input')) {
+        const allLenInputs = document.querySelectorAll('.prod-len-input');
+        // 마지막 제품 칸인지 확인
+        if (target === allLenInputs[allLenInputs.length - 1]) {
+            createProdInput(); // 새 줄 추가
+            applyGlobalMargin(); // 마진 적용
+            // 새로 생긴 줄의 길이 입력칸으로 포커스
+            const newInputs = document.querySelectorAll('.prod-len-input');
+            newInputs[newInputs.length - 1].focus();
+            return;
+        }
+    }
+
+    // 그 외 일반적인 네비게이션
     const inputs = Array.from(
         document.querySelectorAll('#totalInput, #marginInput, .prod-len-input, .prod-margin-input')
     );
@@ -470,7 +477,7 @@ document.addEventListener('keydown', (e) => {
     let nextIndex = -1;
 
     if (target.classList.contains('prod-len-input')) {
-        nextIndex = currentIndex + 2;
+        nextIndex = currentIndex + 2; // 마진 건너뛰기
     } else {
         nextIndex = currentIndex + 1;
     }
